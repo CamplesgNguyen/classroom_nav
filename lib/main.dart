@@ -88,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         // Location marker
                         CurrentLocationLayer(
                           alignPositionOnUpdate: AlignOnUpdate.always,
-                          alignDirectionOnUpdate: AlignOnUpdate.never,
+                          alignDirectionOnUpdate: AlignOnUpdate.always,
                           style: const LocationMarkerStyle(
                             // marker: DefaultLocationMarker(
                             //   child: Icon(
