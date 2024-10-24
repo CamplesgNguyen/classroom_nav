@@ -1,3 +1,4 @@
+import 'package:classroom_nav/helpers/algorithm.dart';
 import 'package:classroom_nav/helpers/location.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -84,7 +85,18 @@ class _MyHomePageState extends State<MyHomePage> {
                           userAgentPackageName: 'com.example.app',
                           // And many more recommended properties!
                         ),
-                        
+
+                        // Path
+                        PolylineLayer(
+                          polylines: [
+                            Polyline(
+                              points: getPathCoords(LatLng(curLocation!.latitude!.toDouble(), curLocation!.longitude!.toDouble()), const LatLng(33.87921111117505, -117.88469904853733)),
+                              color: Colors.blue,
+                              strokeWidth: 1
+                            ),
+                          ],
+                        ),
+
                         // Location marker
                         CurrentLocationLayer(
                           alignPositionOnUpdate: AlignOnUpdate.always,
@@ -100,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             markerDirection: MarkerDirection.heading,
                           ),
                         ),
-                                                
+
                         // Map credit
                         RichAttributionWidget(
                           attributions: [

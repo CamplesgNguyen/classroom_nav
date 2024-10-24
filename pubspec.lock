@@ -169,7 +169,7 @@ packages:
     source: sdk
     version: "0.0.0"
   geolocator:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: geolocator
       sha256: "0ec58b731776bc43097fcf751f79681b6a8f6d3bc737c94779fe9f1ad73c1a81"
