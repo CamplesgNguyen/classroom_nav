@@ -5,7 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:signals/signals.dart';
 
 const double coordModValue = 0.0001;
-const double maxNeighborDistance = 5;
+const double maxNeighborDistance = 10;
 final showExploredPath = signal(false);
 final showMappingLayer = signal(false);
 final exploredPaths = signal<List<Polyline>>([]);

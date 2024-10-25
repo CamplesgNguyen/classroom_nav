@@ -47,6 +47,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   Position? curLocation;
   final locationData = getCurLocation();
+  List<LatLng> exploredCoordinates = [];
 
   @override
   void initState() {
@@ -95,6 +96,12 @@ class _MyHomePageState extends State<MyHomePage> {
                               .where((e) => Geolocator.distanceBetween(point.latitude, point.longitude, e.coord.latitude, e.coord.longitude) <= maxNeighborDistance)
                               .map((e) => e.coord)
                               .toList()));
+                      for (var coord in mappedCoords.last.neighborCoords) {
+                        CoordPoint neighbor = mappedCoords.firstWhere((e) => e.coord.latitude == coord.latitude && e.coord.longitude == coord.longitude);
+                        if (neighbor.neighborCoords.indexWhere((e) => e.latitude == point.latitude && e.longitude == point.longitude) == -1) {
+                          neighbor.neighborCoords.add(point);
+                        }
+                      }
                       mappedPaths.addAll(mappedCoords.last.neighborCoords.map((e) => Polyline(points: [mappedCoords.last.coord, e], strokeWidth: 5, color: Colors.purple)));
                       //Save
                       mappedCoords.map((e) => e.toJson()).toList();
@@ -115,8 +122,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   // Explored Paths
                   // Path
                   Visibility(
-                    visible: showExploredPath.watch(context) && exploredPaths.watch(context).isNotEmpty,
-                    child: PolylineLayer(polylines: exploredPaths.watch(context)),
+                    visible: showExploredPath.watch(context),
+                    child: PolylineLayer(polylines: [Polyline(points: exploredCoordinates, color: Colors.red, strokeWidth: 5)]),
                   ),
 
                   // Shortest Path
@@ -146,11 +153,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       ElevatedButton(
                           onPressed: () => showExploredPath.value ? showExploredPath.value = false : showExploredPath.value = true,
                           child: Text(showExploredPath.value ? 'Hide Explored' : 'Show Explored')),
+
                       ElevatedButton(
                           onPressed: () async {
                             // await getPathCoords(LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()), const LatLng(33.88218882346271, -117.88254123765721));
-                            await getPathCoords(const LatLng(33.880766, -117.881812), const LatLng(33.88218882346271, -117.88254123765721));
-
+                            exploredCoordinates.clear();
+                            await traceRoute(const LatLng(33.880766, -117.881812), const LatLng(33.88218832797471, -117.88250908377887));
                             setState(() {});
                           },
                           child: Text('GO! ${exploredPaths.watch(context).length.toString()}')),
@@ -221,6 +229,9 @@ class _MyHomePageState extends State<MyHomePage> {
         point: point,
         child: InkWell(
           onSecondaryTap: () {
+            for (var element in mappedCoords.where((e) => e.neighborCoords.indexWhere((c) => c.latitude == point.latitude && c.longitude == point.longitude) != -1)) {
+              element.neighborCoords.removeWhere((e) => e.latitude == point.latitude && e.longitude == point.longitude);
+            }
             mappedMakers.removeWhere((element) => element.point.latitude == point.latitude && element.point.longitude == point.longitude);
             mappedCoords.removeWhere((element) => element.coord.latitude == point.latitude && element.coord.longitude == point.longitude);
             mappedPaths.removeWhere((e) => e.points.where((p) => p.latitude == point.latitude && p.longitude == point.longitude).isNotEmpty);
@@ -238,5 +249,38 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
         ));
+  }
+
+  // Algorithm
+  Future<void> traceRoute(LatLng startCoord, LatLng destCoord) async {
+    List<CoordPoint> exploredPoints = [];
+    List<CoordPoint> frontier = [CoordPoint(startCoord, getNearbyPoints(startCoord).map((e) => e.coord).toList())];
+
+    while (exploredPoints.isEmpty || (exploredPoints.last.coord.latitude != destCoord.latitude && exploredPoints.last.coord.longitude != destCoord.longitude)) {
+      exploredPoints.add(frontier.removeAt(0));
+      exploredCoordinates.add(exploredPoints.last.coord);
+      setState(() {});
+      await Future.delayed(const Duration(milliseconds: 100));
+      List<CoordPoint> neighborPoints = mappedCoords
+          .where((e) => exploredPoints.last.neighborCoords.map((n) => [n.latitude, n.longitude]).where((m) => m.first == e.coord.latitude && m.last == e.coord.longitude).isNotEmpty)
+          .toList();
+      for (var point in neighborPoints) {
+        // Calc path values
+        point.gVal = Geolocator.distanceBetween(point.coord.latitude, point.coord.longitude, exploredPoints.last.coord.latitude, exploredPoints.last.coord.longitude);
+        point.hVal = Geolocator.distanceBetween(point.coord.latitude, point.coord.longitude, destCoord.latitude, destCoord.longitude);
+        point.fVal = point.gVal + point.hVal;
+
+        // Store points
+        int indexOfSamePointInFrontier = frontier.indexWhere((e) => e.coord.latitude == point.coord.latitude && e.coord.longitude == point.coord.longitude);
+        if (indexOfSamePointInFrontier == -1 && exploredPoints.indexWhere((e) => e.coord.latitude == point.coord.latitude && e.coord.longitude == point.coord.longitude) == -1) {
+          frontier.add(point);
+        } else if (indexOfSamePointInFrontier != -1 && frontier[indexOfSamePointInFrontier].fVal > point.fVal) {
+          frontier.removeAt(indexOfSamePointInFrontier);
+          frontier.insert(indexOfSamePointInFrontier, point);
+        }
+      }
+      frontier.sort((a, b) => a.fVal.compareTo(b.fVal));
+    }
+    debugPrint(exploredCoordinates.length.toString());
   }
 }
