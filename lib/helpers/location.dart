@@ -1,21 +1,24 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:location/location.dart';
 
-Future<LocationData?> getCurLocation() async {
+Future<Position?> getCurLocation() async {
   Location location = Location();
 
-  bool serviceEnabled;
+  // bool serviceEnabled;
   PermissionStatus permissionGranted;
 
-  serviceEnabled = await location.serviceEnabled();
-  if (!serviceEnabled) {
-    serviceEnabled = await location.requestService();
-    if (!serviceEnabled) {
-      return null;
-    }
-  }
+  // serviceEnabled = await location.serviceEnabled();
+  // if (!serviceEnabled) {
+  //   serviceEnabled = await location.requestService();
+  //   if (!serviceEnabled) {
+  //     return null;
+  //   }
+  // }
 
-  if (!kIsWeb) {
+  if (!kIsWeb && !Platform.isWindows) {
     permissionGranted = await location.hasPermission();
     if (permissionGranted == PermissionStatus.denied) {
       permissionGranted = await location.requestPermission();
@@ -25,5 +28,7 @@ Future<LocationData?> getCurLocation() async {
     }
   }
 
-  return await location.getLocation();
+  return await Geolocator.getCurrentPosition();
 }
+
+
