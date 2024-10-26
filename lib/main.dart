@@ -5,12 +5,14 @@ import 'package:classroom_nav/global_variables.dart';
 import 'package:classroom_nav/helpers/algorithm.dart';
 import 'package:classroom_nav/helpers/classes.dart';
 import 'package:classroom_nav/helpers/location.dart';
+import 'package:classroom_nav/helpers/popups.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -48,6 +50,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Position? curLocation;
   final locationData = getCurLocation();
   List<LatLng> exploredCoordinates = [];
+  List<LatLng> shortestCoordinates = [];
+  TextEditingController destLookupTextController = TextEditingController();
 
   @override
   void initState() {
@@ -62,7 +66,9 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: mapView(),
+      body: Stack(
+        children: [mapView(), bottomSheet()],
+      ),
     );
   }
 
@@ -113,22 +119,29 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 children: [
                   TileLayer(
-                    // Display map tiles from any source
+                    // Display map tiles from osm
                     urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', // OSMF's Tile Server
                     userAgentPackageName: 'com.example.app',
-                    // And many more recommended properties!
                   ),
 
+                  //Mapped markers
+                  Visibility(
+                      visible: showMappingLayer.watch(context),
+                      child: PolylineLayer(
+                        polylines: mappedPaths,
+                      )),
+                  Visibility(visible: showMappingLayer.watch(context), child: MarkerLayer(markers: mappedMakers)),
+
                   // Explored Paths
-                  // Path
                   Visibility(
                     visible: showExploredPath.watch(context),
                     child: PolylineLayer(polylines: [Polyline(points: exploredCoordinates, color: Colors.red, strokeWidth: 5)]),
                   ),
 
                   // Shortest Path
-                  PolylineLayer(polylines: shortestPaths.watch(context)),
-                  // Location marker
+                  PolylineLayer(polylines: [Polyline(points: shortestCoordinates, color: Colors.blue, strokeWidth: 5)]),
+
+                  // User location marker
                   CurrentLocationLayer(
                     alignPositionOnUpdate: AlignOnUpdate.never,
                     alignDirectionOnUpdate: AlignOnUpdate.never,
@@ -137,41 +150,52 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
 
-                  // Top Buttons
-                  Wrap(
-                    children: [
-                      // ElevatedButton(onPressed: () => loadBottomSheet(), child: const Text('show bottom sheet')),
-                      ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              showMappingLayer.value ? showMappingLayer.value = false : showMappingLayer.value = true;
-                              debugPrint(showMappingLayer.toString());
-                            });
-                          },
-                          child: Text(showMappingLayer.value ? 'Stop Mapping' : 'Start Mapping')),
-
-                      ElevatedButton(
-                          onPressed: () => showExploredPath.value ? showExploredPath.value = false : showExploredPath.value = true,
-                          child: Text(showExploredPath.value ? 'Hide Explored' : 'Show Explored')),
-
-                      ElevatedButton(
-                          onPressed: () async {
-                            // await getPathCoords(LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()), const LatLng(33.88218882346271, -117.88254123765721));
-                            exploredCoordinates.clear();
-                            await traceRoute(const LatLng(33.880766, -117.881812), const LatLng(33.88218832797471, -117.88250908377887));
-                            setState(() {});
-                          },
-                          child: Text('GO! ${exploredPaths.watch(context).length.toString()}')),
-                    ],
+                  // Destination lookup textfield
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TypeAheadField<CoordPoint>(
+                      direction: VerticalDirection.down,
+                      controller: destLookupTextController,
+                      builder: (context, controller, focusNode) => TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        autofocus: true,
+                        style: DefaultTextStyle.of(context).style.copyWith(fontStyle: FontStyle.italic),
+                        decoration: InputDecoration(
+                          filled: true,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          hintText: 'Enter room name',
+                        ),
+                      ),
+                      decorationBuilder: (context, child) => Material(
+                        type: MaterialType.card,
+                        elevation: 4,
+                        borderRadius: BorderRadius.circular(10),
+                        child: child,
+                      ),
+                      itemBuilder: (context, point) => ListTile(
+                        title: Text(point.locName),
+                      ),
+                      hideOnEmpty: true,
+                      hideOnSelect: true,
+                      hideOnUnfocus: true,
+                      hideWithKeyboard: true,
+                      retainOnLoading: true,
+                      onSelected: (point) {
+                        destLookupTextController.text = point.locName;
+                        destinationCoord = point.coord;
+                        setState(() {});
+                      },
+                      suggestionsCallback: (String search) {
+                        return suggestionsCallback(search);
+                      },
+                      loadingBuilder: (context) => const Text('Loading...'),
+                      errorBuilder: (context, error) => const Text('Error!'),
+                      emptyBuilder: (context) => const Text('No rooms found!'),
+                      // itemSeparatorBuilder: itemSeparatorBuilder,
+                      // listBuilder: settings.gridLayout.value ? gridLayoutBuilder : null,
+                    ),
                   ),
-
-                  //Mapped Markers
-                  Visibility(
-                      visible: showMappingLayer.watch(context),
-                      child: PolylineLayer(
-                        polylines: mappedPaths,
-                      )),
-                  Visibility(visible: showMappingLayer.watch(context), child: MarkerLayer(markers: mappedMakers)),
 
                   // Map credit
                   RichAttributionWidget(
@@ -192,25 +216,86 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   // Bottom Sheet
-  void loadBottomSheet() {
-    showBarModalBottomSheet(
-        barrierColor: Colors.transparent,
-        context: context,
-        builder: (BuildContext context) {
-          return StatefulBuilder(
-            builder: (BuildContext context, setState) {
-              return const SizedBox(
-                height: 200,
-              );
-            },
-          );
-        });
+  Widget bottomSheet() {
+    return DraggableScrollableSheet(
+      minChildSize: 0.1,
+      initialChildSize: 0.1,
+      builder: (BuildContext context, scrollController) {
+        return Container(
+            height: 100,
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(
+              color: Theme.of(context).canvasColor,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(25),
+                topRight: Radius.circular(25),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                //drag bar
+                Center(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).hintColor,
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    ),
+                    height: 4,
+                    width: 40,
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
+                // Nav Buttons
+
+                // Debug Buttons
+                Wrap(
+                  spacing: 5,
+                  runSpacing: 5,
+                  children: [
+                    ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            showMappingLayer.value ? showMappingLayer.value = false : showMappingLayer.value = true;
+                            debugPrint(showMappingLayer.toString());
+                          });
+                        },
+                        child: Text(showMappingLayer.value ? 'Stop Mapping' : 'Start Mapping')),
+                    ElevatedButton(
+                        onPressed: () => showExploredPath.value ? showExploredPath.value = false : showExploredPath.value = true,
+                        child: Text(showExploredPath.value ? 'Hide Explored' : 'Show Explored')),
+                    ElevatedButton(
+                        onPressed: destinationCoord != null
+                            ? () async {
+                                exploredCoordinates.clear();
+                                shortestCoordinates.clear();
+                                setState(() {});
+                              }
+                            : null,
+                        child: const Text('Clear Paths')),
+                    ElevatedButton(
+                        onPressed: destinationCoord != null
+                            ? () async {
+                                // await getPathCoords(LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()), const LatLng(33.88218882346271, -117.88254123765721));
+                                exploredCoordinates.clear();
+                                shortestCoordinates.clear();
+                                await traceRoute(const LatLng(33.880766, -117.881812), destinationCoord!);
+                                setState(() {});
+                              }
+                            : null,
+                        child: const Text('GO!')),
+                  ],
+                ),
+              ],
+            ));
+      },
+    );
   }
 
   //load mapped coords
   Future<List<Marker>> loadMappedMarkers(String jsonPath) async {
     List<Marker> markers = [];
-    String markersFromJson = await File(jsonPath).readAsString();
+    String markersFromJson = Platform.isAndroid ? await rootBundle.loadString(jsonPath) : await File(jsonPath).readAsString();
     if (markersFromJson.isNotEmpty) {
       var jsonData = await jsonDecode(markersFromJson);
       for (var coordPoint in jsonData) {
@@ -241,6 +326,15 @@ class _MyHomePageState extends State<MyHomePage> {
             File(mappedCoordsJsonPath).writeAsStringSync(encoder.convert(mappedCoords));
             setState(() {});
           },
+          onDoubleTap: () async {
+            String locName = await addLocNamePopup(context);
+            if (locName.isNotEmpty) mappedCoords.firstWhere((e) => e.coord.latitude == point.latitude && e.coord.longitude == point.longitude).locName = locName;
+            //Save
+            mappedCoords.map((e) => e.toJson()).toList();
+            const JsonEncoder encoder = JsonEncoder.withIndent('  ');
+            File(mappedCoordsJsonPath).writeAsStringSync(encoder.convert(mappedCoords));
+            setState(() {});
+          },
           child: Tooltip(
             message: 'Lat: ${point.latitude}, Long: ${point.longitude}',
             child: const Icon(
@@ -260,7 +354,7 @@ class _MyHomePageState extends State<MyHomePage> {
       exploredPoints.add(frontier.removeAt(0));
       exploredCoordinates.add(exploredPoints.last.coord);
       setState(() {});
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 50));
       List<CoordPoint> neighborPoints = mappedCoords
           .where((e) => exploredPoints.last.neighborCoords.map((n) => [n.latitude, n.longitude]).where((m) => m.first == e.coord.latitude && m.last == e.coord.longitude).isNotEmpty)
           .toList();
@@ -281,6 +375,25 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       frontier.sort((a, b) => a.fVal.compareTo(b.fVal));
     }
-    debugPrint(exploredCoordinates.length.toString());
+
+    // Back track to get shortest path
+    List<CoordPoint> backTrack = [];
+    while (exploredPoints.isNotEmpty) {
+      if (backTrack.isEmpty) {
+        backTrack.add(exploredPoints.removeLast());
+      } else if (backTrack.last.neighborCoords.indexWhere((e) => e.latitude == exploredPoints.last.coord.latitude && e.longitude == exploredPoints.last.coord.longitude) != -1 ||
+          exploredPoints.length == 1) {
+        backTrack.add(exploredPoints.removeLast());
+      } else {
+        exploredPoints.removeLast();
+      }
+    }
+
+    // Reverse push to draw shortest path
+    while (backTrack.isNotEmpty) {
+      shortestCoordinates.add(backTrack.removeLast().coord);
+      setState(() {});
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
   }
 }

@@ -20,3 +20,13 @@ List<CoordPoint> getNearbyPoints(LatLng curCoord) {
   return neighborCoords;
 }
 
+Future<List<CoordPoint>> suggestionsCallback(String pattern) async =>
+      Future<List<CoordPoint>>.delayed(
+        const Duration(milliseconds: 100),
+        () => mappedCoords.where((point) {
+          final nameLower = point.locName.toLowerCase().split(' ').join('');
+          final patternLower = pattern.toLowerCase().split(' ').join('');
+          return nameLower.contains(patternLower);
+        }).where((e) => e.locName.isNotEmpty).toList(),
+      );
+

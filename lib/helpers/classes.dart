@@ -7,8 +7,12 @@ part 'classes.g.dart';
 class CoordPoint {
   CoordPoint(this.coord, this.neighborCoords);
   LatLng coord;
+  String locName = '';
+  @JsonKey(includeFromJson: false, includeToJson: false)
   double gVal = 0.0;
+  @JsonKey(includeFromJson: false, includeToJson: false)
   double hVal = 0.0;
+  @JsonKey(includeFromJson: false, includeToJson: false)
   double fVal = 0.0;
   List<LatLng> neighborCoords;
 
