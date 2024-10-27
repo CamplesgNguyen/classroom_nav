@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:classroom_nav/global_variables.dart';
 import 'package:classroom_nav/helpers/algorithm.dart';
 import 'package:classroom_nav/helpers/classes.dart';
+import 'package:classroom_nav/helpers/json_save.dart';
 import 'package:classroom_nav/helpers/location.dart';
 import 'package:classroom_nav/helpers/popups.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:label_marker/label_marker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -56,9 +58,8 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // loadBottomSheet();
       // Load mapped markers
-      mappedMakers = await loadMappedMarkers(mappedCoordsJsonPath);
+      mappedMakers = Platform.isWindows ? await loadMappedMarkers(mappedCoordsLocalJsonPath) : await loadMappedMarkers(mappedCoordsJsonPath);
     });
     super.initState();
   }
@@ -110,9 +111,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       }
                       mappedPaths.addAll(mappedCoords.last.neighborCoords.map((e) => Polyline(points: [mappedCoords.last.coord, e], strokeWidth: 5, color: Colors.purple)));
                       //Save
-                      mappedCoords.map((e) => e.toJson()).toList();
-                      const JsonEncoder encoder = JsonEncoder.withIndent('  ');
-                      File(mappedCoordsJsonPath).writeAsStringSync(encoder.convert(mappedCoords));
+                      mappedCoordSave();
                       setState(() {});
                     }
                   },
@@ -150,6 +149,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
 
+                  // Map Makers
+                  
+                  
                   // Destination lookup textfield
                   Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -219,10 +221,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget bottomSheet() {
     return DraggableScrollableSheet(
       minChildSize: 0.1,
-      initialChildSize: 0.1,
+      initialChildSize: 0.15,
       builder: (BuildContext context, scrollController) {
         return Container(
-            height: 100,
             clipBehavior: Clip.hardEdge,
             decoration: BoxDecoration(
               color: Theme.of(context).canvasColor,
@@ -246,45 +247,78 @@ class _MyHomePageState extends State<MyHomePage> {
                     margin: const EdgeInsets.symmetric(vertical: 10),
                   ),
                 ),
-                // Nav Buttons
 
-                // Debug Buttons
-                Wrap(
-                  spacing: 5,
-                  runSpacing: 5,
-                  children: [
-                    ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            showMappingLayer.value ? showMappingLayer.value = false : showMappingLayer.value = true;
-                            debugPrint(showMappingLayer.toString());
-                          });
-                        },
-                        child: Text(showMappingLayer.value ? 'Stop Mapping' : 'Start Mapping')),
-                    ElevatedButton(
-                        onPressed: () => showExploredPath.value ? showExploredPath.value = false : showExploredPath.value = true,
-                        child: Text(showExploredPath.value ? 'Hide Explored' : 'Show Explored')),
-                    ElevatedButton(
-                        onPressed: destinationCoord != null
-                            ? () async {
-                                exploredCoordinates.clear();
-                                shortestCoordinates.clear();
-                                setState(() {});
-                              }
-                            : null,
-                        child: const Text('Clear Paths')),
-                    ElevatedButton(
-                        onPressed: destinationCoord != null
-                            ? () async {
-                                // await getPathCoords(LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()), const LatLng(33.88218882346271, -117.88254123765721));
-                                exploredCoordinates.clear();
-                                shortestCoordinates.clear();
-                                await traceRoute(const LatLng(33.880766, -117.881812), destinationCoord!);
-                                setState(() {});
-                              }
-                            : null,
-                        child: const Text('GO!')),
-                  ],
+                SingleChildScrollView(
+                  controller: scrollController,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Nav Buttons
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2.5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton(
+                                onPressed: destinationCoord != null
+                                    ? () async {
+                                        exploredCoordinates.clear();
+                                        shortestCoordinates.clear();
+                                        setState(() {});
+                                      }
+                                    : null,
+                                child: const Text('Clear Paths')),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            ElevatedButton(
+                                onPressed: destinationCoord != null
+                                    ? () async {
+                                        // await getPathCoords(LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()), const LatLng(33.88218882346271, -117.88254123765721));
+                                        exploredCoordinates.clear();
+                                        shortestCoordinates.clear();
+                                        await traceRoute(const LatLng(33.880766, -117.881812), destinationCoord!);
+                                        setState(() {});
+                                      }
+                                    : null,
+                                child: const Text('GO!')),
+                          ],
+                        ),
+                      ),
+                      // Debug Buttons
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2.5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    showMappingLayer.value ? showMappingLayer.value = false : showMappingLayer.value = true;
+                                    debugPrint(showMappingLayer.toString());
+                                  });
+                                },
+                                child: Text(showMappingLayer.value ? 'Stop Mapping' : 'Start Mapping')),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            ElevatedButton(
+                                onPressed: () => showExploredPath.value ? showExploredPath.value = false : showExploredPath.value = true,
+                                child: Text(showExploredPath.value ? 'Hide Explored' : 'Show Explored')),
+                          ],
+                        ),
+                      ),
+
+                      // Mapping instruction
+                      Visibility(
+                          visible: showMappingLayer.value,
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 5, vertical: 2.5),
+                            child: Text('Left click to mark a coord. Right click to delete. Double click to name'),
+                          ))
+                    ],
+                  ),
                 ),
               ],
             ));
@@ -321,18 +355,14 @@ class _MyHomePageState extends State<MyHomePage> {
             mappedCoords.removeWhere((element) => element.coord.latitude == point.latitude && element.coord.longitude == point.longitude);
             mappedPaths.removeWhere((e) => e.points.where((p) => p.latitude == point.latitude && p.longitude == point.longitude).isNotEmpty);
             //Save
-            mappedCoords.map((e) => e.toJson()).toList();
-            const JsonEncoder encoder = JsonEncoder.withIndent('  ');
-            File(mappedCoordsJsonPath).writeAsStringSync(encoder.convert(mappedCoords));
+            mappedCoordSave();
             setState(() {});
           },
           onDoubleTap: () async {
             String locName = await addLocNamePopup(context);
             if (locName.isNotEmpty) mappedCoords.firstWhere((e) => e.coord.latitude == point.latitude && e.coord.longitude == point.longitude).locName = locName;
             //Save
-            mappedCoords.map((e) => e.toJson()).toList();
-            const JsonEncoder encoder = JsonEncoder.withIndent('  ');
-            File(mappedCoordsJsonPath).writeAsStringSync(encoder.convert(mappedCoords));
+            mappedCoordSave();
             setState(() {});
           },
           child: Tooltip(

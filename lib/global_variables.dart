@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:classroom_nav/helpers/classes.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -10,7 +12,9 @@ final showMappingLayer = signal(false);
 final exploredPaths = signal<List<Polyline>>([]);
 final shortestPaths = signal<List<Polyline>>([]);
 LatLng? destinationCoord;
+String destName = '';
 List<Marker> mappedMakers = [];
 List<CoordPoint> mappedCoords = [];
 List<Polyline> mappedPaths = [];
 String mappedCoordsJsonPath = 'assets/jsons/mapped_coords.json';
+String mappedCoordsLocalJsonPath = '${Directory.current.path}/jsons/mapped_coords_local.json';
