@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:classroom_nav/global_variables.dart';
 import 'package:classroom_nav/helpers/algorithm.dart';
 import 'package:classroom_nav/helpers/classes.dart';
+import 'package:classroom_nav/helpers/custom_marker.dart';
+import 'package:classroom_nav/helpers/enums.dart';
 import 'package:classroom_nav/helpers/json_save.dart';
 import 'package:classroom_nav/helpers/location.dart';
 import 'package:classroom_nav/helpers/popups.dart';
@@ -13,7 +15,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:label_marker/label_marker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -68,8 +69,10 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
-        children: [mapView(), bottomSheet()],
+        children: [mapView()],
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
+      floatingActionButton: floatingButtons(),
     );
   }
 
@@ -89,13 +92,14 @@ class _MyHomePageState extends State<MyHomePage> {
             } else {
               curLocation = snapshot.data;
               return FlutterMap(
+                mapController: mapController,
                 options: MapOptions(
                   // initialCenter: curLocation != null ? LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()) : const LatLng(33.87895949613489, -117.88469338638068),
-                  initialCenter: const LatLng(33.880766, -117.881812),
+                  initialCenter: debugCenterCoord,
                   initialZoom: 18,
                   onTap: (tapPosition, point) {
                     if (showMappingLayer.value) {
-                      mappedMakers.add(mappingMaker(point));
+                      mappedMakers.add(mappingMaker(point, false, false, false));
                       // Get neighbors
                       mappedCoords.add(CoordPoint(
                           point,
@@ -150,8 +154,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
 
                   // Map Makers
-                  
-                  
+                  Visibility(
+                      visible: destinationCoord != null,
+                      child: MarkerLayer(
+                          alignment: Alignment.center, rotate: true, markers: [if (destinationCoord != null) Marker(width: 80, height: 80, point: destinationCoord!, child: LabelMarker(destName))])),
+
                   // Destination lookup textfield
                   Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -164,10 +171,14 @@ class _MyHomePageState extends State<MyHomePage> {
                         autofocus: true,
                         style: DefaultTextStyle.of(context).style.copyWith(fontStyle: FontStyle.italic),
                         decoration: InputDecoration(
-                          filled: true,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                          hintText: 'Enter room name',
-                        ),
+                            filled: true,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            hintText: 'Enter room name',
+                            suffixIcon: IconButton(
+                                onPressed: () {
+                                  destLookupTextController.clear();
+                                },
+                                icon: const Icon(Icons.clear))),
                       ),
                       decorationBuilder: (context, child) => Material(
                         type: MaterialType.card,
@@ -186,6 +197,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       onSelected: (point) {
                         destLookupTextController.text = point.locName;
                         destinationCoord = point.coord;
+                        destName = point.locName;
+                        mapController.move(point.coord, 18);
+                        curPathFindingState = PathFindingState.ready;
                         setState(() {});
                       },
                       suggestionsCallback: (String search) {
@@ -201,6 +215,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   // Map credit
                   RichAttributionWidget(
+                    alignment: AttributionAlignment.bottomLeft,
                     attributions: [
                       TextSourceAttribution(
                         'OpenStreetMap contributors',
@@ -217,115 +232,6 @@ class _MyHomePageState extends State<MyHomePage> {
         });
   }
 
-  // Bottom Sheet
-  Widget bottomSheet() {
-    return DraggableScrollableSheet(
-      minChildSize: 0.1,
-      initialChildSize: 0.15,
-      builder: (BuildContext context, scrollController) {
-        return Container(
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              color: Theme.of(context).canvasColor,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(25),
-                topRight: Radius.circular(25),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                //drag bar
-                Center(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).hintColor,
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    ),
-                    height: 4,
-                    width: 40,
-                    margin: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                ),
-
-                SingleChildScrollView(
-                  controller: scrollController,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Nav Buttons
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2.5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton(
-                                onPressed: destinationCoord != null
-                                    ? () async {
-                                        exploredCoordinates.clear();
-                                        shortestCoordinates.clear();
-                                        setState(() {});
-                                      }
-                                    : null,
-                                child: const Text('Clear Paths')),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            ElevatedButton(
-                                onPressed: destinationCoord != null
-                                    ? () async {
-                                        // await getPathCoords(LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()), const LatLng(33.88218882346271, -117.88254123765721));
-                                        exploredCoordinates.clear();
-                                        shortestCoordinates.clear();
-                                        await traceRoute(const LatLng(33.880766, -117.881812), destinationCoord!);
-                                        setState(() {});
-                                      }
-                                    : null,
-                                child: const Text('GO!')),
-                          ],
-                        ),
-                      ),
-                      // Debug Buttons
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2.5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    showMappingLayer.value ? showMappingLayer.value = false : showMappingLayer.value = true;
-                                    debugPrint(showMappingLayer.toString());
-                                  });
-                                },
-                                child: Text(showMappingLayer.value ? 'Stop Mapping' : 'Start Mapping')),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            ElevatedButton(
-                                onPressed: () => showExploredPath.value ? showExploredPath.value = false : showExploredPath.value = true,
-                                child: Text(showExploredPath.value ? 'Hide Explored' : 'Show Explored')),
-                          ],
-                        ),
-                      ),
-
-                      // Mapping instruction
-                      Visibility(
-                          visible: showMappingLayer.value,
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 5, vertical: 2.5),
-                            child: Text('Left click to mark a coord. Right click to delete. Double click to name'),
-                          ))
-                    ],
-                  ),
-                ),
-              ],
-            ));
-      },
-    );
-  }
-
   //load mapped coords
   Future<List<Marker>> loadMappedMarkers(String jsonPath) async {
     List<Marker> markers = [];
@@ -335,7 +241,7 @@ class _MyHomePageState extends State<MyHomePage> {
       for (var coordPoint in jsonData) {
         mappedCoords.add(CoordPoint.fromJson(coordPoint));
         mappedPaths.addAll(mappedCoords.last.neighborCoords.map((e) => Polyline(points: [mappedCoords.last.coord, e], strokeWidth: 5, color: Colors.purple)));
-        markers.add(mappingMaker(CoordPoint.fromJson(coordPoint).coord));
+        markers.add(mappingMaker(CoordPoint.fromJson(coordPoint).coord, CoordPoint.fromJson(coordPoint).isEntrancePoint, CoordPoint.fromJson(coordPoint).isStairsPoint, CoordPoint.fromJson(coordPoint).isElevatorsPoint));
       }
     }
 
@@ -343,7 +249,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   //Mapping Marker
-  Marker mappingMaker(LatLng point) {
+  Marker mappingMaker(LatLng point, bool? isEntrance, bool? isStairs, bool? isEvevators) {
     return Marker(
         point: point,
         child: InkWell(
@@ -359,17 +265,15 @@ class _MyHomePageState extends State<MyHomePage> {
             setState(() {});
           },
           onDoubleTap: () async {
-            String locName = await addLocNamePopup(context);
-            if (locName.isNotEmpty) mappedCoords.firstWhere((e) => e.coord.latitude == point.latitude && e.coord.longitude == point.longitude).locName = locName;
-            //Save
-            mappedCoordSave();
+            await mappingCoordSettingsPopup(context, mappedCoords.firstWhere((e) => e.coord.latitude == point.latitude && e.coord.longitude == point.longitude));
             setState(() {});
           },
           child: Tooltip(
             message: 'Lat: ${point.latitude}, Long: ${point.longitude}',
-            child: const Icon(
+            child: Icon(
               Icons.gps_fixed_sharp,
               size: 15,
+              color: isEntrance != null && isEntrance ? Colors.green : isStairs != null && isStairs ? Colors.yellow : isEvevators != null && isEvevators ? Colors.orange : null
             ),
           ),
         ));
@@ -425,5 +329,74 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {});
       await Future.delayed(const Duration(milliseconds: 50));
     }
+  }
+
+  //Floating button
+  Widget floatingButtons() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Visibility(
+          visible: showDebugButtons,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Wrap(
+              direction: Axis.vertical,
+              spacing: 5,
+              runSpacing: 5,
+              children: [
+                FloatingActionButton.small(
+                    tooltip: showMappingLayer.value ? 'Stop Mapping' : 'Start Mapping',
+                    onPressed: () {
+                      setState(() {
+                        showMappingLayer.value ? showMappingLayer.value = false : showMappingLayer.value = true;
+                        debugPrint(showMappingLayer.toString());
+                      });
+                    },
+                    child: Icon(showMappingLayer.value ? Icons.map : Icons.map_outlined)),
+                FloatingActionButton.small(
+                    tooltip: showExploredPath.value ? 'Hide Explored' : 'Show Explored',
+                    onPressed: () => showExploredPath.value ? showExploredPath.value = false : showExploredPath.value = true,
+                    child: Icon(showExploredPath.value ? Icons.pattern_sharp : Icons.linear_scale_sharp)),
+              ],
+            ),
+          ),
+        ),
+        GestureDetector(
+          onLongPress: () {
+            showDebugButtons ? showDebugButtons = false : showDebugButtons = true;
+            setState(() {});
+          },
+          child: FloatingActionButton(
+              onPressed: () async {
+                if (curPathFindingState == PathFindingState.idle) {
+                  mapController.move(debugCenterCoord, mapController.camera.zoom);
+                } else if (curPathFindingState == PathFindingState.finding || curPathFindingState == PathFindingState.finished) {
+                  exploredCoordinates.clear();
+                  shortestCoordinates.clear();
+                  destLookupTextController.clear();
+                  destinationCoord = null;
+                  destName = '';
+                  mapController.move(debugCenterCoord, mapController.camera.zoom);
+                  curPathFindingState = PathFindingState.idle;
+                } else {
+                  // await getPathCoords(LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()), const LatLng(33.88218882346271, -117.88254123765721));
+                  exploredCoordinates.clear();
+                  shortestCoordinates.clear();
+                  curPathFindingState = PathFindingState.finding;
+                  await traceRoute(debugCenterCoord, destinationCoord!);
+                  curPathFindingState = PathFindingState.finished;
+                }
+                setState(() {});
+              },
+              child: Icon(curPathFindingState == PathFindingState.idle
+                  ? Icons.gps_fixed_outlined
+                  : curPathFindingState == PathFindingState.finding || curPathFindingState == PathFindingState.finished
+                      ? Icons.stop
+                      : Icons.play_arrow)),
+        ),
+      ],
+    );
   }
 }

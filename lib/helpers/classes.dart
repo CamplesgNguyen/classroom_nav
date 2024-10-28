@@ -8,6 +8,9 @@ class CoordPoint {
   CoordPoint(this.coord, this.neighborCoords);
   LatLng coord;
   String locName = '';
+  bool? isEntrancePoint = false;
+  bool? isStairsPoint = false;
+  bool? isElevatorsPoint = false;
   @JsonKey(includeFromJson: false, includeToJson: false)
   double gVal = 0.0;
   @JsonKey(includeFromJson: false, includeToJson: false)

@@ -1,20 +1,25 @@
 import 'dart:io';
 
 import 'package:classroom_nav/helpers/classes.dart';
+import 'package:classroom_nav/helpers/enums.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:signals/signals.dart';
 
 const double coordModValue = 0.0001;
 const double maxNeighborDistance = 10;
+LatLng debugCenterCoord = const LatLng(33.880766, -117.881812);
 final showExploredPath = signal(false);
 final showMappingLayer = signal(false);
 final exploredPaths = signal<List<Polyline>>([]);
 final shortestPaths = signal<List<Polyline>>([]);
+bool showDebugButtons = false;
 LatLng? destinationCoord;
 String destName = '';
+MapController mapController = MapController();
 List<Marker> mappedMakers = [];
 List<CoordPoint> mappedCoords = [];
 List<Polyline> mappedPaths = [];
+PathFindingState curPathFindingState = PathFindingState.idle;
 String mappedCoordsJsonPath = 'assets/jsons/mapped_coords.json';
 String mappedCoordsLocalJsonPath = '${Directory.current.path}/jsons/mapped_coords_local.json';
