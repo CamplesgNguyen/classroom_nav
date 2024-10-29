@@ -8,9 +8,19 @@ import 'package:toggle_switch/toggle_switch.dart';
 
 Future<void> mappingCoordSettingsPopup(context, CoordPoint point) async {
   TextEditingController newLocName = TextEditingController();
-  int locTypeIndex = -1;
+  newLocName.text = point.locName;
+  int locTypeIndex = point.isREntrancePoint != null && point.isREntrancePoint!
+      ? 1
+      : point.isBEntrancePoint != null && point.isBEntrancePoint!
+          ? 2
+          : point.isStairsPoint != null && point.isStairsPoint!
+              ? 3
+              : point.isElevatorsPoint != null && point.isREntrancePoint!
+                  ? 4
+                  : 0;
   List<LatLng> toBeRemovedNeighborCoords = [];
   final nameFormKey = GlobalKey<FormState>();
+
   return await showDialog(
       barrierDismissible: false,
       context: context,
@@ -24,22 +34,44 @@ Future<void> mappingCoordSettingsPopup(context, CoordPoint point) async {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text('Types', style: Theme.of(context).textTheme.titleMedium),
+                    ToggleSwitch(
+                      minWidth: double.infinity,
+                      minHeight: 30,
+                      initialLabelIndex: locTypeIndex,
+                      animate: true,
+                      totalSwitches: 5,
+                      labels: const ['None', 'Room Entrance', 'Building Entrance', 'Stairs', 'Elevators'],
+                      onToggle: (index) {
+                        if (index != null) {
+                          locTypeIndex = index;
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    Divider(
+                      thickness: 2,
+                      color: Theme.of(context).dividerColor,
+                    ),
                     Text('Location Name', style: Theme.of(context).textTheme.titleMedium),
                     Form(
                       key: nameFormKey,
                       child: TextFormField(
+                        enabled: locTypeIndex == 1 || locTypeIndex == 2,
                         controller: newLocName,
                         maxLines: 1,
                         textAlignVertical: TextAlignVertical.center,
                         inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.deny(RegExp('[\\/:*?"<>|]'))],
                         validator: (value) {
-                          if (mappedCoords.indexWhere((e) => e.locName == value) != -1) {
+                          if (mappedCoords.indexWhere((e) => e.locName.toLowerCase() == value!.toLowerCase()) != -1 && value!.isNotEmpty) {
                             return 'This name already existed';
                           }
                           return null;
                         },
                         decoration: InputDecoration(
                             labelText: 'Enter location name',
+                            hintText: 'CS 101',
+                            hintStyle: TextStyle(color: Theme.of(context).hintColor.withAlpha(50)),
                             focusedErrorBorder: OutlineInputBorder(
                               borderSide: BorderSide(width: 1, color: Theme.of(context).colorScheme.error),
                               borderRadius: BorderRadius.circular(2),
@@ -73,45 +105,30 @@ Future<void> mappingCoordSettingsPopup(context, CoordPoint point) async {
                       thickness: 2,
                       color: Theme.of(context).dividerColor,
                     ),
-                    Text('Types', style: Theme.of(context).textTheme.titleMedium),
-                    ToggleSwitch(
-                      minWidth: double.infinity,
-                      minHeight: 30,
-                      initialLabelIndex: 0,
-                      totalSwitches: 4,
-                      labels: const ['None', 'Entrance', 'Stairs', 'Elevators'],
-                      onToggle: (index) {
-                        if (index != null) {
-                          locTypeIndex = index;
-                        }
-                      },
-                    ),
-                    Divider(
-                      thickness: 2,
-                      color: Theme.of(context).dividerColor,
-                    ),
                     Text('Connected coords', style: Theme.of(context).textTheme.titleMedium),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (int i = 0; i < point.neighborCoords.length; i++)
-                          ListTile(
-                            dense: true,
-                            title: Text('Lat: ${point.neighborCoords[i].latitude}\nLng: ${point.neighborCoords[i].longitude}'),
-                            trailing: ElevatedButton.icon(
-                                onPressed: () {
-                                  if (!toBeRemovedNeighborCoords.contains(point.neighborCoords[i])) {
-                                    toBeRemovedNeighborCoords.add(point.neighborCoords[i]);
-                                  } else {
-                                    toBeRemovedNeighborCoords.remove(point.neighborCoords[i]);
-                                  }
-                                  setState(
-                                    () {},
-                                  );
-                                },
-                                label: Icon(Icons.delete, color: toBeRemovedNeighborCoords.contains(point.neighborCoords[i]) ? Colors.red : null)),
-                          )
-                      ],
+                    SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (int i = 0; i < point.neighborCoords.length; i++)
+                            ListTile(
+                              dense: true,
+                              title: Text('Lat: ${point.neighborCoords[i].latitude}\nLng: ${point.neighborCoords[i].longitude}'),
+                              trailing: ElevatedButton.icon(
+                                  onPressed: () {
+                                    if (!toBeRemovedNeighborCoords.contains(point.neighborCoords[i])) {
+                                      toBeRemovedNeighborCoords.add(point.neighborCoords[i]);
+                                    } else {
+                                      toBeRemovedNeighborCoords.remove(point.neighborCoords[i]);
+                                    }
+                                    setState(
+                                      () {},
+                                    );
+                                  },
+                                  label: Icon(Icons.delete, color: toBeRemovedNeighborCoords.contains(point.neighborCoords[i]) ? Colors.red : null)),
+                            )
+                        ],
+                      ),
                     )
                   ],
                 ),
@@ -130,12 +147,14 @@ Future<void> mappingCoordSettingsPopup(context, CoordPoint point) async {
                         }
                         // Types
                         locTypeIndex == 1
-                            ? point.isEntrancePoint = true
+                            ? point.isREntrancePoint = true
                             : locTypeIndex == 2
-                                ? point.isStairsPoint = true
+                                ? point.isBEntrancePoint = true
                                 : locTypeIndex == 3
-                                    ? point.isElevatorsPoint = true
-                                    : locTypeIndex = -1;
+                                    ? point.isStairsPoint = true
+                                    : locTypeIndex == 4
+                                        ? point.isElevatorsPoint = true
+                                        : locTypeIndex = 0;
                         // Neighbor coords
                         for (var element in toBeRemovedNeighborCoords) {
                           mappedCoords

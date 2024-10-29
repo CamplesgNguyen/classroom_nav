@@ -99,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   initialZoom: 18,
                   onTap: (tapPosition, point) {
                     if (showMappingLayer.value) {
-                      mappedMakers.add(mappingMaker(point, false, false, false));
+                      mappedMakers.add(mappingMaker(point, false, false, false, false));
                       // Get neighbors
                       mappedCoords.add(CoordPoint(
                           point,
@@ -127,13 +127,13 @@ class _MyHomePageState extends State<MyHomePage> {
                     userAgentPackageName: 'com.example.app',
                   ),
 
-                  //Mapped markers
+                  //Mapped markers in nav mode
                   Visibility(
-                      visible: showMappingLayer.watch(context),
+                      visible: showMappingLayer.watch(context) && curPathFindingState != PathFindingState.idle,
                       child: PolylineLayer(
                         polylines: mappedPaths,
                       )),
-                  Visibility(visible: showMappingLayer.watch(context), child: MarkerLayer(markers: mappedMakers)),
+                  Visibility(visible: showMappingLayer.watch(context) && curPathFindingState != PathFindingState.idle, child: MarkerLayer(markers: mappedMakers)),
 
                   // Explored Paths
                   Visibility(
@@ -153,11 +153,19 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
 
-                  // Map Makers
+                  // Map Maker intertest point
                   Visibility(
                       visible: destinationCoord != null,
                       child: MarkerLayer(
                           alignment: Alignment.center, rotate: true, markers: [if (destinationCoord != null) Marker(width: 80, height: 80, point: destinationCoord!, child: LabelMarker(destName))])),
+
+                  //Mapped markers
+                  Visibility(
+                      visible: showMappingLayer.watch(context) && curPathFindingState == PathFindingState.idle,
+                      child: PolylineLayer(
+                        polylines: mappedPaths,
+                      )),
+                  Visibility(visible: showMappingLayer.watch(context) && curPathFindingState == PathFindingState.idle, child: MarkerLayer(markers: mappedMakers)),
 
                   // Destination lookup textfield
                   Padding(
@@ -177,6 +185,10 @@ class _MyHomePageState extends State<MyHomePage> {
                             suffixIcon: IconButton(
                                 onPressed: () {
                                   destLookupTextController.clear();
+                                  curPathFindingState = PathFindingState.idle;
+                                  destinationCoord = null;
+                                  destName = '';
+                                  setState(() {});
                                 },
                                 icon: const Icon(Icons.clear))),
                       ),
@@ -241,7 +253,8 @@ class _MyHomePageState extends State<MyHomePage> {
       for (var coordPoint in jsonData) {
         mappedCoords.add(CoordPoint.fromJson(coordPoint));
         mappedPaths.addAll(mappedCoords.last.neighborCoords.map((e) => Polyline(points: [mappedCoords.last.coord, e], strokeWidth: 5, color: Colors.purple)));
-        markers.add(mappingMaker(CoordPoint.fromJson(coordPoint).coord, CoordPoint.fromJson(coordPoint).isEntrancePoint, CoordPoint.fromJson(coordPoint).isStairsPoint, CoordPoint.fromJson(coordPoint).isElevatorsPoint));
+        markers.add(mappingMaker(CoordPoint.fromJson(coordPoint).coord, CoordPoint.fromJson(coordPoint).isREntrancePoint, CoordPoint.fromJson(coordPoint).isBEntrancePoint,
+            CoordPoint.fromJson(coordPoint).isStairsPoint, CoordPoint.fromJson(coordPoint).isElevatorsPoint));
       }
     }
 
@@ -249,8 +262,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   //Mapping Marker
-  Marker mappingMaker(LatLng point, bool? isEntrance, bool? isStairs, bool? isEvevators) {
+  Marker mappingMaker(LatLng point, bool? isREntrance, bool? isBEntrance, bool? isStairs, bool? isEvevators) {
     return Marker(
+        width: 15,
+        height: 15,
         point: point,
         child: InkWell(
           onSecondaryTap: () {
@@ -270,11 +285,17 @@ class _MyHomePageState extends State<MyHomePage> {
           },
           child: Tooltip(
             message: 'Lat: ${point.latitude}, Long: ${point.longitude}',
-            child: Icon(
-              Icons.gps_fixed_sharp,
-              size: 15,
-              color: isEntrance != null && isEntrance ? Colors.green : isStairs != null && isStairs ? Colors.yellow : isEvevators != null && isEvevators ? Colors.orange : null
-            ),
+            child: Icon(Icons.gps_fixed_sharp,
+                size: 15,
+                color: isREntrance != null && isREntrance
+                    ? Colors.green
+                    : isBEntrance != null && isBEntrance
+                        ? Colors.blue
+                        : isStairs != null && isStairs
+                            ? Colors.yellow
+                            : isEvevators != null && isEvevators
+                                ? Colors.orange
+                                : null),
           ),
         ));
   }

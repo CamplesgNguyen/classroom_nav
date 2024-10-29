@@ -13,7 +13,8 @@ CoordPoint _$CoordPointFromJson(Map<String, dynamic> json) => CoordPoint(
           .toList(),
     )
       ..locName = json['locName'] as String
-      ..isEntrancePoint = json['isEntrancePoint'] as bool?
+      ..isBEntrancePoint = json['isBEntrancePoint'] as bool?
+      ..isREntrancePoint = json['isREntrancePoint'] as bool?
       ..isStairsPoint = json['isStairsPoint'] as bool?
       ..isElevatorsPoint = json['isElevatorsPoint'] as bool?;
 
@@ -21,7 +22,8 @@ Map<String, dynamic> _$CoordPointToJson(CoordPoint instance) =>
     <String, dynamic>{
       'coord': instance.coord,
       'locName': instance.locName,
-      'isEntrancePoint': instance.isEntrancePoint,
+      'isBEntrancePoint': instance.isBEntrancePoint,
+      'isREntrancePoint': instance.isREntrancePoint,
       'isStairsPoint': instance.isStairsPoint,
       'isElevatorsPoint': instance.isElevatorsPoint,
       'neighborCoords': instance.neighborCoords,
