@@ -9,6 +9,7 @@ import 'package:signals/signals.dart';
 const double coordModValue = 0.0001;
 const double maxNeighborDistance = 10;
 LatLng debugCenterCoord = const LatLng(33.880766, -117.881812);
+LatLng? centerCoord;
 final showExploredPath = signal(false);
 final showMappingLayer = signal(false);
 final exploredPaths = signal<List<Polyline>>([]);
