@@ -32,12 +32,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Campus Navigation',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 27, 51, 229)),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: ''),
     );
   }
 }
@@ -343,8 +343,10 @@ class _MyHomePageState extends State<MyHomePage> {
     //Center  before trace
     mapController.fitCamera(CameraFit.coordinates(
         coordinates: [startCoord, destCoord],
-        padding: EdgeInsets.all(kIsWeb
+        padding: EdgeInsets.all(kIsWeb && mapController.camera.nonRotatedSize.x > 600  
             ? 200
+            : kIsWeb && kIsWeb && mapController.camera.nonRotatedSize.x < 600
+            ? 50
             : Platform.isAndroid
                 ? 50
                 : 200)));
@@ -447,7 +449,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Padding(
                   padding: EdgeInsets.zero,
                   child: Card(
-                    elevation: 10,
+                    elevation: 5,
                     shape: Theme.of(context).floatingActionButtonTheme.shape,
                     color: Theme.of(context).floatingActionButtonTheme.backgroundColor,
                     child: Padding(
