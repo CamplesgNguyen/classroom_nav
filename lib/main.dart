@@ -344,14 +344,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     //Center  before trace
     mapController.fitCamera(CameraFit.coordinates(
-        coordinates: [startCoord, destCoord],
-        padding: EdgeInsets.all(kIsWeb && mapController.camera.nonRotatedSize.x > 600
-            ? 200
-            : kIsWeb && kIsWeb && mapController.camera.nonRotatedSize.x < 600
-                ? 50
-                : Platform.isAndroid
-                    ? 50
-                    : 200)));
+        coordinates: [startCoord, destCoord], padding: EdgeInsets.symmetric(horizontal: mapController.camera.nonRotatedSize.x / 5, vertical: mapController.camera.nonRotatedSize.y / 5)));
 
     while (exploredPoints.isEmpty || (exploredPoints.last.coord.latitude != destCoord.latitude && exploredPoints.last.coord.longitude != destCoord.longitude)) {
       exploredPoints.add(frontier.removeAt(0));
