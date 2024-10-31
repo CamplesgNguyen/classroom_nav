@@ -97,11 +97,12 @@ class _MyHomePageState extends State<MyHomePage> {
               );
             } else {
               curLocation = snapshot.data;
+              centerCoord = LatLng(curLocation!.latitude, curLocation!.longitude);
               return FlutterMap(
                 mapController: mapController,
                 options: MapOptions(
                   // initialCenter: curLocation != null ? LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()) : const LatLng(33.87895949613489, -117.88469338638068),
-                  initialCenter: debugCenterCoord,
+                  initialCenter: centerCoord!,
                   initialZoom: 18,
                   cameraConstraint: CameraConstraint.containCenter(bounds: LatLngBounds(const LatLng(33.8892181509212, -117.89024039406391), const LatLng(33.87568283383185, -117.87979836324752))),
                   onMapReady: () {
@@ -109,6 +110,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     setState(() {});
                   },
                   onPositionChanged: (camera, hasGesture) async {
+                    centerCoord = mapController.camera.center;
                     if (curPathFindingState == PathFindingState.finished) {
                       bool checkOnRoute = onRouteCheck();
                       if (!checkOnRoute) {
@@ -149,7 +151,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   TileLayer(
                     // Display map tiles from osm
                     urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', // OSMF's Tile Server
-                    userAgentPackageName: 'com.example.app',
+                    userAgentPackageName: 'com.campusnav.app',
                     tileBounds: LatLngBounds(const LatLng(33.8892181509212, -117.89024039406391), const LatLng(33.87568283383185, -117.87979836324752)),
                   ),
 
@@ -343,13 +345,13 @@ class _MyHomePageState extends State<MyHomePage> {
     //Center  before trace
     mapController.fitCamera(CameraFit.coordinates(
         coordinates: [startCoord, destCoord],
-        padding: EdgeInsets.all(kIsWeb && mapController.camera.nonRotatedSize.x > 600  
+        padding: EdgeInsets.all(kIsWeb && mapController.camera.nonRotatedSize.x > 600
             ? 200
             : kIsWeb && kIsWeb && mapController.camera.nonRotatedSize.x < 600
-            ? 50
-            : Platform.isAndroid
                 ? 50
-                : 200)));
+                : Platform.isAndroid
+                    ? 50
+                    : 200)));
 
     while (exploredPoints.isEmpty || (exploredPoints.last.coord.latitude != destCoord.latitude && exploredPoints.last.coord.longitude != destCoord.longitude)) {
       exploredPoints.add(frontier.removeAt(0));
@@ -472,14 +474,14 @@ class _MyHomePageState extends State<MyHomePage> {
               child: FloatingActionButton(
                   onPressed: () async {
                     if (curPathFindingState == PathFindingState.idle) {
-                      mapController.move(debugCenterCoord, 18);
+                      mapController.move(centerCoord!, 18);
                     } else if (curPathFindingState == PathFindingState.finding || curPathFindingState == PathFindingState.finished) {
                       exploredCoordinates.clear();
                       shortestCoordinates.clear();
                       destLookupTextController.clear();
                       destinationCoord = null;
                       destName = '';
-                      mapController.move(debugCenterCoord, 18);
+                      mapController.move(centerCoord!, 18);
                       curPathFindingState = PathFindingState.idle;
                       contUpdatePos = false;
                     } else {
@@ -488,7 +490,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       shortestCoordinates.clear();
                       curPathFindingState = PathFindingState.finding;
                       // await traceRoute(debugCenterCoord, destinationCoord!);
-                      await traceRoute(LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()), destinationCoord!);
+                      await traceRoute(centerCoord!, destinationCoord!);
                       curPathFindingState = PathFindingState.finished;
                       contUpdatePos = true;
                     }
