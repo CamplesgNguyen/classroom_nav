@@ -1,11 +1,11 @@
 {
-    "name": "classroom_nav",
-    "short_name": "classroom_nav",
+    "name": "Campus Navigation",
+    "short_name": "Campus Navigation",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "A navigation app project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
