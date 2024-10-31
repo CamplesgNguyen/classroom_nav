@@ -6,19 +6,20 @@ import 'package:location/location.dart';
 
 Future<Position?> getCurLocation() async {
   Location location = Location();
+  late bool serviceEnabled;
 
   // bool serviceEnabled;
   PermissionStatus permissionGranted;
 
-  // serviceEnabled = await location.serviceEnabled();
-  // if (!serviceEnabled) {
-  //   serviceEnabled = await location.requestService();
-  //   if (!serviceEnabled) {
-  //     return null;
-  //   }
-  // }
-
   if (!kIsWeb && !Platform.isWindows) {
+    serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        return null;
+      }
+    }
+
     permissionGranted = await location.hasPermission();
     if (permissionGranted == PermissionStatus.denied) {
       permissionGranted = await location.requestPermission();
@@ -30,5 +31,3 @@ Future<Position?> getCurLocation() async {
 
   return await Geolocator.getCurrentPosition();
 }
-
-
