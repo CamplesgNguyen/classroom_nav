@@ -27,3 +27,4 @@ String mappedCoordsJsonPath = 'assets/jsons/mapped_coords.json';
 String mappedCoordsLocalJsonPath = '${Directory.current.path}/jsons/mapped_coords_local.json';
 bool mapDoneLoading = false;
 bool contUpdatePos = false;
+double prevRotationValue = 0.0;

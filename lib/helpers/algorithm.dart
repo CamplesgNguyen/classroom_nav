@@ -81,3 +81,22 @@ extension on double {
     return this;
   }
 }
+
+void navMapRotation(List<LatLng> coords) {
+  LatLng closestCoord = coords.first;
+  double closestDistance = -1;
+  for (var coord in coords) {
+    double newDistance = Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, coord.latitude, coord.longitude);
+    if (coord == coords.first) continue;
+    if (closestDistance == -1 || newDistance < closestDistance) {
+      closestDistance = newDistance;
+      closestCoord = coord;
+    }
+  }
+
+  double newHeadingAngle = Geolocator.bearingBetween(centerCoord!.latitude, centerCoord!.longitude, closestCoord.latitude, closestCoord.longitude);
+  if (prevRotationValue != newHeadingAngle) {
+    mapController.rotate(360 - newHeadingAngle);
+    prevRotationValue = newHeadingAngle;
+  }
+}

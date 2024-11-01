@@ -62,6 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<LatLng> exploredCoordinates = [];
   List<LatLng> shortestCoordinates = [];
   TextEditingController destLookupTextController = TextEditingController();
+  LocationMarkerHeading? userMarkerHeadingData;
 
   @override
   void initState() {
@@ -117,9 +118,13 @@ class _MyHomePageState extends State<MyHomePage> {
                     curLocation = await Geolocator.getCurrentPosition();
                     centerCoord = LatLng(curLocation!.latitude, curLocation!.longitude);
                     if (curPathFindingState == PathFindingState.finished) {
-                      // Estimate time recalc
+                      // Update heading data
+                      // userMarkerHeadingData = getNavHeading(shortestCoordinates, curLocation!.heading, curLocation!.headingAccuracy);
+                      // navMapRotation(shortestCoordinates);
+                      //// Estimate time recalc
                       // estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, curLocation!.speed.convertFromTo(LENGTH.meters, LENGTH.miles)!.toDouble())!.pretty(abbreviated: true);
 
+                      // debugPrint('Rotation: ${mapController.camera.rotation}');
                       // Check onroute
                       bool checkOnRoute = onRouteCheck(shortestCoordinates);
                       if (!checkOnRoute) {
@@ -185,7 +190,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   CurrentLocationLayer(
                     alignPositionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
                     alignDirectionOnUpdate: AlignOnUpdate.always,
-                    headingStream: curPathFindingState == PathFindingState.finished ? Stream.value(getNavHeading(shortestCoordinates, curLocation!.heading, curLocation!.headingAccuracy)) : const LocationMarkerDataStreamFactory().fromCompassHeadingStream(),
+                    // headingStream: curPathFindingState == PathFindingState.finished ? Stream.value(userMarkerHeadingData) : const LocationMarkerDataStreamFactory().fromCompassHeadingStream(),
                     style: const LocationMarkerStyle(
                       markerDirection: MarkerDirection.heading,
                     ),
@@ -489,6 +494,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: FloatingActionButton(
                   onPressed: () async {
                     if (curPathFindingState == PathFindingState.idle) {
+                      curLocation = await Geolocator.getCurrentPosition();
                       mapController.move(centerCoord!, 18);
                     } else if (curPathFindingState == PathFindingState.finding || curPathFindingState == PathFindingState.finished) {
                       exploredCoordinates.clear();
