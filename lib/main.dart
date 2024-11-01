@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -18,7 +20,10 @@ import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:location/location.dart';
 import 'package:signals/signals_flutter.dart';
+import 'package:units_converter/models/extension_converter.dart';
+import 'package:units_converter/properties/length.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 void main() {
@@ -101,7 +106,6 @@ class _MyHomePageState extends State<MyHomePage> {
               return FlutterMap(
                 mapController: mapController,
                 options: MapOptions(
-                  // initialCenter: curLocation != null ? LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()) : const LatLng(33.87895949613489, -117.88469338638068),
                   initialCenter: centerCoord!,
                   initialZoom: 18,
                   cameraConstraint: CameraConstraint.containCenter(bounds: LatLngBounds(const LatLng(33.8892181509212, -117.89024039406391), const LatLng(33.87568283383185, -117.87979836324752))),
@@ -110,18 +114,23 @@ class _MyHomePageState extends State<MyHomePage> {
                     setState(() {});
                   },
                   onPositionChanged: (camera, hasGesture) async {
-                    centerCoord = mapController.camera.center;
+                    curLocation = await Geolocator.getCurrentPosition();
+                    centerCoord = LatLng(curLocation!.latitude, curLocation!.longitude);
                     if (curPathFindingState == PathFindingState.finished) {
-                      bool checkOnRoute = onRouteCheck();
+                      // Estimate time recalc
+                      // estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, curLocation!.speed.convertFromTo(LENGTH.meters, LENGTH.miles)!.toDouble())!.pretty(abbreviated: true);
+
+                      // Check onroute
+                      bool checkOnRoute = onRouteCheck(shortestCoordinates);
                       if (!checkOnRoute) {
                         exploredCoordinates.clear();
                         shortestCoordinates.clear();
                         curPathFindingState = PathFindingState.finding;
                         // await traceRoute(debugCenterCoord, destinationCoord!);
-                        await traceRoute(LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()), destinationCoord!);
+                        await traceRoute(centerCoord!, destinationCoord!);
                         curPathFindingState = PathFindingState.finished;
                       }
-                      debugPrint(checkOnRoute.toString());
+                      // debugPrint(checkOnRoute.toString());
                     }
                   },
                   onTap: (tapPosition, point) {
@@ -176,6 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   CurrentLocationLayer(
                     alignPositionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
                     alignDirectionOnUpdate: AlignOnUpdate.always,
+                    headingStream: curPathFindingState == PathFindingState.finished ? Stream.value(getNavHeading(shortestCoordinates, curLocation!.heading, curLocation!.headingAccuracy)) : const LocationMarkerDataStreamFactory().fromCompassHeadingStream(),
                     style: const LocationMarkerStyle(
                       markerDirection: MarkerDirection.heading,
                     ),
@@ -220,10 +230,22 @@ class _MyHomePageState extends State<MyHomePage> {
                             hintText: 'Enter room name',
                             suffixIcon: IconButton(
                                 onPressed: () {
-                                  destLookupTextController.clear();
-                                  curPathFindingState = PathFindingState.idle;
-                                  destinationCoord = null;
-                                  destName = '';
+                                  if (destLookupTextController.text.isEmpty) {
+                                    focusNode.unfocus();
+                                    exploredCoordinates.clear();
+                                    shortestCoordinates.clear();
+                                    destLookupTextController.clear();
+                                    destinationCoord = null;
+                                    destName = '';
+                                    mapController.move(centerCoord!, 18);
+                                    curPathFindingState = PathFindingState.idle;
+                                    contUpdatePos = false;
+                                  } else {
+                                    destLookupTextController.clear();
+                                    curPathFindingState = PathFindingState.idle;
+                                    destinationCoord = null;
+                                    destName = '';
+                                  }
                                   setState(() {});
                                 },
                                 icon: const Icon(Icons.clear))),
@@ -393,11 +415,11 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     // Total time calc
-    estimateNavTime.value = totalNavTimeCalc(shortestCoordinates)!.pretty(abbreviated: true);
+    estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, 3)!.pretty(abbreviated: true);
 
     // Zoom back to start point for navigation
     // mapController.move(debugCenterCoord, 19);
-    mapController.move(LatLng(curLocation!.latitude, curLocation!.longitude), 19);
+    mapController.move(centerCoord!, 19);
   }
 
   // Navigation
