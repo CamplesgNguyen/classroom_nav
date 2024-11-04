@@ -21,6 +21,7 @@ import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:units_converter/models/extension_converter.dart';
 import 'package:units_converter/properties/length.dart';
@@ -104,6 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
             } else {
               curLocation = snapshot.data;
               centerCoord = LatLng(curLocation!.latitude, curLocation!.longitude);
+
               return FlutterMap(
                 mapController: mapController,
                 options: MapOptions(
@@ -189,8 +191,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   // User location marker
                   CurrentLocationLayer(
                     alignPositionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
-                    alignDirectionOnUpdate: AlignOnUpdate.always,
-                    // headingStream: curPathFindingState == PathFindingState.finished ? Stream.value(userMarkerHeadingData) : const LocationMarkerDataStreamFactory().fromCompassHeadingStream(),
+                    alignDirectionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
+                    // headingStream: magnetometerEventStream().map((e) => LocationMarkerHeading(heading: getHeadingFromData(e.x, e.y)!, accuracy: 0.5)),
+                    headingStream: curPathFindingState == PathFindingState.finished ? Stream.fromFuture(getHeadingFromData()) : const LocationMarkerDataStreamFactory().fromCompassHeadingStream(),
                     style: const LocationMarkerStyle(
                       markerDirection: MarkerDirection.heading,
                     ),
@@ -274,6 +277,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         destinationCoord = point.coord;
                         destName = point.locName;
                         FocusScope.of(context).unfocus();
+                        mapController.rotate(0);
                         mapController.move(point.coord, 18);
                         curPathFindingState = PathFindingState.ready;
                         setState(() {});
@@ -426,9 +430,6 @@ class _MyHomePageState extends State<MyHomePage> {
     // mapController.move(debugCenterCoord, 19);
     mapController.move(centerCoord!, 19);
   }
-
-  // Navigation
-  void navigate() {}
 
   // Floating button
   Widget floatingButtons(context) {
