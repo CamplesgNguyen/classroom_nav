@@ -103,7 +103,7 @@ void navMapRotation(List<LatLng> coords) {
   }
 }
 
-Future<LocationMarkerHeading?> getHeadingFromData() async {
+Stream<LocationMarkerHeading?> getHeadingFromData() async* {
   double directionDegrees = 0.0;
   magnetometerEventStream(samplingPeriod: SensorInterval.normalInterval).listen(
     (MagnetometerEvent event) {
@@ -124,6 +124,7 @@ Future<LocationMarkerHeading?> getHeadingFromData() async {
     },
     cancelOnError: true,
   );
-  
-  return LocationMarkerHeading(heading: directionDegrees, accuracy: 0.5);
+  debugPrint(directionDegrees.toString());
+
+  yield LocationMarkerHeading(heading: directionDegrees, accuracy: 0.5);
 }
