@@ -4,7 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:units_converter/units_converter.dart';
+import 'dart:math' as math;
 
 List<CoordPoint> getNearbyPoints(LatLng curCoord) {
   List<CoordPoint> neighborCoords = [];
@@ -99,4 +101,29 @@ void navMapRotation(List<LatLng> coords) {
     mapController.rotate(360 - newHeadingAngle);
     prevRotationValue = newHeadingAngle;
   }
+}
+
+Future<LocationMarkerHeading?> getHeadingFromData() async {
+  double directionDegrees = 0.0;
+  magnetometerEventStream(samplingPeriod: SensorInterval.normalInterval).listen(
+    (MagnetometerEvent event) {
+      // Calculate direction in radians
+      double directionRadians = math.atan2(event.y, event.x);
+
+      // Convert radians to degrees
+      directionDegrees = directionRadians * (180 / math.pi);
+
+      // Adjust angle to be relative to true north
+      directionDegrees -= 90.0;
+      if (directionDegrees < 0) {
+        directionDegrees += 360.0; // Ensure angle is within the range [0, 360)
+      }
+    },
+    onError: (error) {
+      debugPrint('Error fetching magnetometer data: $error');
+    },
+    cancelOnError: true,
+  );
+  
+  return LocationMarkerHeading(heading: directionDegrees, accuracy: 0.5);
 }
