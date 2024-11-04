@@ -193,7 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     alignPositionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
                     alignDirectionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
                     // headingStream: magnetometerEventStream().map((e) => LocationMarkerHeading(heading: getHeadingFromData(e.x, e.y)!, accuracy: 0.5)),
-                    headingStream: curPathFindingState == PathFindingState.finished ? Stream.fromFuture(getHeadingFromData()) : const LocationMarkerDataStreamFactory().fromCompassHeadingStream(),
+                    headingStream: kIsWeb ? getHeadingFromData() : const LocationMarkerDataStreamFactory().fromCompassHeadingStream(),
                     style: const LocationMarkerStyle(
                       markerDirection: MarkerDirection.heading,
                     ),
@@ -496,6 +496,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: () async {
                     if (curPathFindingState == PathFindingState.idle) {
                       curLocation = await Geolocator.getCurrentPosition();
+                      centerCoord = LatLng(curLocation!.latitude, curLocation!.longitude);
                       mapController.move(centerCoord!, 18);
                     } else if (curPathFindingState == PathFindingState.finding || curPathFindingState == PathFindingState.finished) {
                       exploredCoordinates.clear();
