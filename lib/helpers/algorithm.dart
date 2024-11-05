@@ -84,23 +84,36 @@ extension on double {
   }
 }
 
-void navMapRotation(List<LatLng> coords) {
-  LatLng closestCoord = coords.first;
-  double closestDistance = -1;
-  for (var coord in coords) {
-    double newDistance = Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, coord.latitude, coord.longitude);
-    if (coord == coords.first) continue;
-    if (closestDistance == -1 || newDistance < closestDistance) {
-      closestDistance = newDistance;
-      closestCoord = coord;
+double navMapRotation(List<LatLng> coords) {
+  if (coords.isNotEmpty) {
+    LatLng closestCoord = coords.first;
+    double closestDistance = -1;
+    for (var coord in coords) {
+      if (coord == coords.first) continue;
+      double newDistance = Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, coord.latitude, coord.longitude);
+      if (closestDistance == -1 || newDistance < closestDistance) {
+        closestDistance = newDistance;
+        closestCoord = coord;
+      }
+    }
+
+    double newHeadingAngle = Geolocator.bearingBetween(coords.first.latitude, coords.first.longitude, closestCoord.latitude, closestCoord.longitude);
+    if (prevRotationValue != newHeadingAngle) {
+      if (prevRotationValue == 0.0) {
+        prevRotationValue = degToRadian(newHeadingAngle);
+        debugPrint('Heading: $prevRotationValue');
+        return prevRotationValue;
+      } else if (newHeadingAngle > prevRotationValue) {
+        prevRotationValue = degToRadian(newHeadingAngle) - prevRotationValue;
+        return prevRotationValue;
+      } else if (newHeadingAngle < prevRotationValue) {
+        prevRotationValue = degToRadian(prevRotationValue - newHeadingAngle);
+        return prevRotationValue;
+      }
     }
   }
 
-  double newHeadingAngle = Geolocator.bearingBetween(centerCoord!.latitude, centerCoord!.longitude, closestCoord.latitude, closestCoord.longitude);
-  if (prevRotationValue != newHeadingAngle) {
-    mapController.rotate(360 - newHeadingAngle);
-    prevRotationValue = newHeadingAngle;
-  }
+  return prevRotationValue;
 }
 
 Stream<LocationMarkerHeading?> getHeadingFromData() async* {
