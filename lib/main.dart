@@ -117,12 +117,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     setState(() {});
                   },
                   onPositionChanged: (camera, hasGesture) async {
-                    curLocation = await Geolocator.getCurrentPosition();
-                    centerCoord = LatLng(curLocation!.latitude, curLocation!.longitude);
+                    // curLocation = await Geolocator.getCurrentPosition();
+                    // centerCoord = LatLng(curLocation!.latitude, curLocation!.longitude);
                     if (curPathFindingState == PathFindingState.finished) {
                       // Update heading data
                       // userMarkerHeadingData = getNavHeading(shortestCoordinates, curLocation!.heading, curLocation!.headingAccuracy);
-                      // navMapRotation(shortestCoordinates);
+                      manualHeadingValue = navMapRotation(shortestCoordinates);
                       //// Estimate time recalc
                       // estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, curLocation!.speed.convertFromTo(LENGTH.meters, LENGTH.miles)!.toDouble())!.pretty(abbreviated: true);
 
@@ -193,7 +193,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     alignPositionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
                     alignDirectionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
                     // headingStream: magnetometerEventStream().map((e) => LocationMarkerHeading(heading: getHeadingFromData(e.x, e.y)!, accuracy: 0.5)),
-                    headingStream: kIsWeb ? getHeadingFromData() : const LocationMarkerDataStreamFactory().fromCompassHeadingStream(),
+                    headingStream: kIsWeb
+                        ? Stream.value(LocationMarkerHeading(heading: manualHeadingValue, accuracy: 0.5))
+                        : const LocationMarkerDataStreamFactory().fromCompassHeadingStream(),
                     style: const LocationMarkerStyle(
                       markerDirection: MarkerDirection.heading,
                     ),
@@ -239,6 +241,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             suffixIcon: IconButton(
                                 onPressed: () {
                                   if (destLookupTextController.text.isEmpty) {
+                                    curPathFindingState = PathFindingState.idle;
                                     focusNode.unfocus();
                                     exploredCoordinates.clear();
                                     shortestCoordinates.clear();
@@ -246,7 +249,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     destinationCoord = null;
                                     destName = '';
                                     mapController.move(centerCoord!, 18);
-                                    curPathFindingState = PathFindingState.idle;
+                                    manualHeadingValue = 0.0;
                                     contUpdatePos = false;
                                   } else {
                                     destLookupTextController.clear();
@@ -280,7 +283,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         mapController.rotate(0);
                         mapController.move(point.coord, 18);
                         curPathFindingState = PathFindingState.ready;
-                        setState(() {});
                       },
                       suggestionsCallback: (String search) {
                         return suggestionsCallback(search);
@@ -428,7 +430,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // Zoom back to start point for navigation
     // mapController.move(debugCenterCoord, 19);
+    await Future.delayed(const Duration(milliseconds: 100));
     mapController.move(centerCoord!, 19);
+    manualHeadingValue = navMapRotation(shortestCoordinates);
   }
 
   // Floating button
@@ -498,15 +502,18 @@ class _MyHomePageState extends State<MyHomePage> {
                       curLocation = await Geolocator.getCurrentPosition();
                       centerCoord = LatLng(curLocation!.latitude, curLocation!.longitude);
                       mapController.move(centerCoord!, 18);
+                      manualHeadingValue = 0.0;
                     } else if (curPathFindingState == PathFindingState.finding || curPathFindingState == PathFindingState.finished) {
+                      curPathFindingState = PathFindingState.idle;
                       exploredCoordinates.clear();
                       shortestCoordinates.clear();
                       destLookupTextController.clear();
                       destinationCoord = null;
                       destName = '';
                       mapController.move(centerCoord!, 18);
-                      curPathFindingState = PathFindingState.idle;
+                      manualHeadingValue = 0.0;
                       contUpdatePos = false;
+                      setState(() {});
                     } else {
                       // await getPathCoords(LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()), const LatLng(33.88218882346271, -117.88254123765721));
                       exploredCoordinates.clear();

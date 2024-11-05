@@ -28,3 +28,4 @@ String mappedCoordsLocalJsonPath = '${Directory.current.path}/jsons/mapped_coord
 bool mapDoneLoading = false;
 bool contUpdatePos = false;
 double prevRotationValue = 0.0;
+double manualHeadingValue = 0.0;
