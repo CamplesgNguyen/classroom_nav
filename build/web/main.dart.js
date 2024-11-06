@@ -7492,7 +7492,7 @@ q=A.a1(r).h("ay<1>")
 p=new A.ay(r,new A.awu(o,a),q)
 if(!p.ga_(0)){n=A.a3(p,!0,q.h("l.E"))
 s=!0}else o.a+=5}return n},
-aXa(a){if(B.b.nf(a,new A.ax9())===-1)return!1
+aXa(a){if(B.b.nf(a,new A.ax9(a))===-1)return!1
 return!0},
 aAC(a){var s=0,r=A.Q(t.a7),q
 var $async$aAC=A.M(function(b,c){if(b===1)return A.N(c,r)
@@ -7534,7 +7534,7 @@ r=s.b*0.017453292519943295-r*0.017453292519943295
 return Math.atan2(Math.sin(r)*Math.cos(h),Math.cos(i)*Math.sin(h)-Math.sin(i)*Math.cos(h)*Math.cos(r))*57.29577951308232*0.017453292519943295}return 0},
 awu:function awu(a,b){this.a=a
 this.b=b},
-ax9:function ax9(){},
+ax9:function ax9(a){this.a=a},
 axk:function axk(a){this.a=a},
 axi:function axi(){},
 axj:function axj(a){this.a=a},
@@ -40944,9 +40944,12 @@ $1(a){var s=this.b,r=a.a
 return $.jP().kJ(s.a,s.b,r.a,r.b)<=this.a.a},
 $S:20}
 A.ax9.prototype={
-$1(a){var s=$.hn,r=s.a
+$1(a){var s,r
+if(!a.j(0,B.b.gM(this.a))){s=$.hn
+r=s.a
 s=s.b
-return $.jP().kJ(r,s,a.a,a.b)<10},
+s=$.jP().kJ(r,s,a.a,a.b)<10}else s=!1
+return s},
 $S:30}
 A.axk.prototype={
 $0(){var s=$.eP,r=A.a1(s).h("ay<1>"),q=r.h("ay<l.E>")
