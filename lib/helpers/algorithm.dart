@@ -22,7 +22,7 @@ List<CoordPoint> getNearbyPoints(LatLng curCoord) {
 }
 
 bool onRouteCheck(List<LatLng> coords) {
-  if (coords.indexWhere((e) => Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) < maxNeighborDistance) == -1) {
+  if (coords.indexWhere((e) =>e != coords.first &&  Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) < maxNeighborDistance) == -1) {
     return false;
   }
   return true;
