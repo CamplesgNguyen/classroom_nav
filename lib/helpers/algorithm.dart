@@ -1,12 +1,8 @@
 import 'package:classroom_nav/global_variables.dart';
 import 'package:classroom_nav/helpers/classes.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 import 'package:units_converter/units_converter.dart';
-import 'dart:math' as math;
 
 List<CoordPoint> getNearbyPoints(LatLng curCoord) {
   List<CoordPoint> neighborCoords = [];
@@ -57,32 +53,32 @@ Duration? totalNavTimeCalc(List<LatLng> coords, double avgSpeed) {
   }
 }
 
-LocationMarkerHeading getNavHeading(List<LatLng> coords, double heading, double accuracy) {
-  LatLng closestCoord = coords.first;
-  double closestDistance = -1;
-  for (var coord in coords) {
-    double newDistance = Geolocator.distanceBetween(closestCoord.latitude, closestCoord.longitude, coord.latitude, coord.longitude);
-    if (coord == coords.first) continue;
-    if (closestDistance == -1 || newDistance < closestDistance) {
-      closestDistance = newDistance;
-      closestCoord = coord;
-    }
-  }
+// LocationMarkerHeading getNavHeading(List<LatLng> coords, double heading, double accuracy) {
+//   LatLng closestCoord = coords.first;
+//   double closestDistance = -1;
+//   for (var coord in coords) {
+//     double newDistance = Geolocator.distanceBetween(closestCoord.latitude, closestCoord.longitude, coord.latitude, coord.longitude);
+//     if (coord == coords.first) continue;
+//     if (closestDistance == -1 || newDistance < closestDistance) {
+//       closestDistance = newDistance;
+//       closestCoord = coord;
+//     }
+//   }
 
-  double newHeadingAngle = Geolocator.bearingBetween(centerCoord!.latitude, centerCoord!.longitude, closestCoord.latitude, closestCoord.longitude).bounded;
+//   double newHeadingAngle = Geolocator.bearingBetween(centerCoord!.latitude, centerCoord!.longitude, closestCoord.latitude, closestCoord.longitude).bounded;
 
-  debugPrint('Heading: $heading | New heading: ${-heading + degToRadian(newHeadingAngle)} | Acc: $accuracy');
-  return LocationMarkerHeading(heading: -heading + degToRadian(newHeadingAngle), accuracy: accuracy);
-}
+//   debugPrint('Heading: $heading | New heading: ${-heading + degToRadian(newHeadingAngle)} | Acc: $accuracy');
+//   return LocationMarkerHeading(heading: -heading + degToRadian(newHeadingAngle), accuracy: accuracy);
+// }
 
-extension on double {
-  double get bounded {
-    if (this > 180) {
-      return this - 360;
-    }
-    return this;
-  }
-}
+// extension on double {
+//   double get bounded {
+//     if (this > 180) {
+//       return this - 360;
+//     }
+//     return this;
+//   }
+// }
 
 double navMapRotation(List<LatLng> coords) {
   if (coords.isNotEmpty) {
@@ -97,47 +93,49 @@ double navMapRotation(List<LatLng> coords) {
       }
     }
 
-    double newHeadingAngle = Geolocator.bearingBetween(coords.first.latitude, coords.first.longitude, closestCoord.latitude, closestCoord.longitude);
-    if (prevRotationValue != newHeadingAngle) {
-      if (prevRotationValue == 0.0) {
-        prevRotationValue = degToRadian(newHeadingAngle);
-        debugPrint('Heading: $prevRotationValue');
-        return prevRotationValue;
-      } else if (newHeadingAngle > prevRotationValue) {
-        prevRotationValue = degToRadian(newHeadingAngle) - prevRotationValue;
-        return prevRotationValue;
-      } else if (newHeadingAngle < prevRotationValue) {
-        prevRotationValue = degToRadian(prevRotationValue - newHeadingAngle);
-        return prevRotationValue;
-      }
-    }
+    double newHeadingAngle = Geolocator.bearingBetween(centerCoord!.latitude, centerCoord!.longitude, closestCoord.latitude, closestCoord.longitude);
+    //   if (prevRotationValue != newHeadingAngle) {
+    //     if (prevRotationValue == 0.0) {
+    //       prevRotationValue = degToRadian(newHeadingAngle);
+    //       debugPrint('Heading: $prevRotationValue');
+    //       return prevRotationValue;
+    //     } else if (newHeadingAngle > prevRotationValue) {
+    //       prevRotationValue = degToRadian(newHeadingAngle) - prevRotationValue;
+    //       return prevRotationValue;
+    //     } else if (newHeadingAngle < prevRotationValue) {
+    //       prevRotationValue = degToRadian(prevRotationValue - newHeadingAngle);
+    //       return prevRotationValue;
+    //     }
+    //   }
+    // }
+    return degToRadian(newHeadingAngle);
   }
 
   return prevRotationValue;
 }
 
-Stream<LocationMarkerHeading?> getHeadingFromData() async* {
-  double directionDegrees = 0.0;
-  magnetometerEventStream(samplingPeriod: SensorInterval.normalInterval).listen(
-    (MagnetometerEvent event) {
-      // Calculate direction in radians
-      double directionRadians = math.atan2(event.y, event.x);
+// Stream<LocationMarkerHeading?> getHeadingFromData() async* {
+//   double directionDegrees = 0.0;
+//   magnetometerEventStream(samplingPeriod: SensorInterval.normalInterval).listen(
+//     (MagnetometerEvent event) {
+//       // Calculate direction in radians
+//       double directionRadians = math.atan2(event.y, event.x);
 
-      // Convert radians to degrees
-      directionDegrees = directionRadians * (180 / math.pi);
+//       // Convert radians to degrees
+//       directionDegrees = directionRadians * (180 / math.pi);
 
-      // Adjust angle to be relative to true north
-      directionDegrees -= 90.0;
-      if (directionDegrees < 0) {
-        directionDegrees += 360.0; // Ensure angle is within the range [0, 360)
-      }
-    },
-    onError: (error) {
-      debugPrint('Error fetching magnetometer data: $error');
-    },
-    cancelOnError: true,
-  );
-  debugPrint(directionDegrees.toString());
+//       // Adjust angle to be relative to true north
+//       directionDegrees -= 90.0;
+//       if (directionDegrees < 0) {
+//         directionDegrees += 360.0; // Ensure angle is within the range [0, 360)
+//       }
+//     },
+//     onError: (error) {
+//       debugPrint('Error fetching magnetometer data: $error');
+//     },
+//     cancelOnError: true,
+//   );
+//   debugPrint(directionDegrees.toString());
 
-  yield LocationMarkerHeading(heading: directionDegrees, accuracy: 0.5);
-}
+//   yield LocationMarkerHeading(heading: directionDegrees, accuracy: 0.5);
+// }

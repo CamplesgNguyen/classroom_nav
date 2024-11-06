@@ -8,6 +8,9 @@ import 'package:signals/signals.dart';
 
 const double coordModValue = 0.0001;
 const double maxNeighborDistance = 10;
+double mapDefaultZoomValue = 18;
+double mapMaxZoomValue = 19;
+double defaultWalkingSpeedMPH = 3;
 LatLng debugCenterCoord = const LatLng(33.880766, -117.881812);
 LatLng? centerCoord;
 final showExploredPath = signal(false);
@@ -29,3 +32,4 @@ bool mapDoneLoading = false;
 bool contUpdatePos = false;
 double prevRotationValue = 0.0;
 double manualHeadingValue = 0.0;
+List<LatLng> headingPolyline = [];
