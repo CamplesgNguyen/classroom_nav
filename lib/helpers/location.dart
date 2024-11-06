@@ -1,10 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:location/location.dart';
 
-Future<Position?> getCurLocation() async {
+Future<bool?> getLocationServicePerm() async {
   Location location = Location();
   late bool serviceEnabled;
 
@@ -28,6 +27,5 @@ Future<Position?> getCurLocation() async {
       }
     }
   }
-
-  return await Geolocator.getCurrentPosition();
+  return true;
 }

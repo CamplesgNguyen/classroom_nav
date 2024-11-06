@@ -1,5 +1,6 @@
 // ignore_for_file: unused_import
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -58,15 +59,15 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Position? curLocation;
-  final locationData = getCurLocation();
   List<LatLng> exploredCoordinates = [];
   List<LatLng> shortestCoordinates = [];
   TextEditingController destLookupTextController = TextEditingController();
   LocationMarkerHeading? userMarkerHeadingData;
+  Stream<Position> positionStream = Geolocator.getPositionStream();
 
   @override
   void initState() {
+    getLocationServicePerm();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Load mapped markers
       mappedMakers = kIsWeb
@@ -91,10 +92,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // Map
   Widget mapView() {
-    return FutureBuilder(
-        future: locationData, // Get current lat & longtitude
+    return StreamBuilder(
+        stream: positionStream, // Get current lat & longtitude
         builder: (ctx, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.connectionState == ConnectionState.active) {
             if (snapshot.hasError) {
               return Center(
                 child: Text(
@@ -103,42 +104,49 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               );
             } else {
-              curLocation = snapshot.data;
-              centerCoord = LatLng(curLocation!.latitude, curLocation!.longitude);
+              // Set center
+              centerCoord = LatLng(snapshot.data!.latitude, snapshot.data!.longitude);
+              // Other algorithms
+              if (curPathFindingState == PathFindingState.finished) {
+                // Update heading data
+                manualHeadingValue = navMapRotation(shortestCoordinates);
+                // Estimate time recalc
+                if (snapshot.data!.speed > 0.0) {
+                  estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, snapshot.data!.speed.convertFromTo(LENGTH.meters, LENGTH.miles)!.toDouble())!.pretty(abbreviated: true);
+                } else {
+                  estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, defaultWalkingSpeedMPH)!.pretty(abbreviated: true);
+                }
+
+                // Check onroute
+                if (shortestCoordinates.length >= 2) {
+                  final distanceFromFirst = Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, shortestCoordinates.first.latitude, shortestCoordinates.first.longitude);
+                  final distanceFromSecond = Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, shortestCoordinates[1].latitude, shortestCoordinates[1].longitude);
+                  if (distanceFromSecond < distanceFromFirst) {
+                    shortestCoordinates.removeAt(0);
+                  }
+                  shortestCoordinates.removeAt(0);
+                  shortestCoordinates.insert(0, LatLng(centerCoord!.latitude, centerCoord!.longitude));
+                }
+                bool checkOnRoute = onRouteCheck(shortestCoordinates);
+                if (!checkOnRoute) {
+                  exploredCoordinates.clear();
+                  shortestCoordinates.clear();
+                  curPathFindingState = PathFindingState.finding;
+                  traceRoute(centerCoord!, destinationCoord!);
+                  curPathFindingState = PathFindingState.finished;
+                }
+              }
 
               return FlutterMap(
                 mapController: mapController,
                 options: MapOptions(
                   initialCenter: centerCoord!,
-                  initialZoom: 18,
+                  initialZoom: mapDefaultZoomValue,
+                  maxZoom: mapMaxZoomValue,
                   cameraConstraint: CameraConstraint.containCenter(bounds: LatLngBounds(const LatLng(33.8892181509212, -117.89024039406391), const LatLng(33.87568283383185, -117.87979836324752))),
                   onMapReady: () {
                     mapDoneLoading = true;
                     setState(() {});
-                  },
-                  onPositionChanged: (camera, hasGesture) async {
-                    // curLocation = await Geolocator.getCurrentPosition();
-                    // centerCoord = LatLng(curLocation!.latitude, curLocation!.longitude);
-                    if (curPathFindingState == PathFindingState.finished) {
-                      // Update heading data
-                      // userMarkerHeadingData = getNavHeading(shortestCoordinates, curLocation!.heading, curLocation!.headingAccuracy);
-                      manualHeadingValue = navMapRotation(shortestCoordinates);
-                      //// Estimate time recalc
-                      // estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, curLocation!.speed.convertFromTo(LENGTH.meters, LENGTH.miles)!.toDouble())!.pretty(abbreviated: true);
-
-                      // debugPrint('Rotation: ${mapController.camera.rotation}');
-                      // Check onroute
-                      bool checkOnRoute = onRouteCheck(shortestCoordinates);
-                      if (!checkOnRoute) {
-                        exploredCoordinates.clear();
-                        shortestCoordinates.clear();
-                        curPathFindingState = PathFindingState.finding;
-                        // await traceRoute(debugCenterCoord, destinationCoord!);
-                        await traceRoute(centerCoord!, destinationCoord!);
-                        curPathFindingState = PathFindingState.finished;
-                      }
-                      // debugPrint(checkOnRoute.toString());
-                    }
                   },
                   onTap: (tapPosition, point) {
                     if (showMappingLayer.value) {
@@ -186,14 +194,17 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
 
                   // Shortest Path
-                  PolylineLayer(polylines: [Polyline(points: shortestCoordinates, color: Colors.blue, strokeWidth: 5)]),
+                  PolylineLayer(polylines: [
+                    Polyline(points: headingPolyline, color: const Color.fromARGB(255, 0, 0, 0), strokeWidth: 5),
+                    Polyline(points: shortestCoordinates, color: Colors.blue, strokeWidth: 5)
+                  ]),
 
                   // User location marker
                   CurrentLocationLayer(
                     alignPositionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
                     alignDirectionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
-                    // headingStream: magnetometerEventStream().map((e) => LocationMarkerHeading(heading: getHeadingFromData(e.x, e.y)!, accuracy: 0.5)),
-                    headingStream: kIsWeb
+                    positionStream: Stream.value(LocationMarkerPosition(latitude: snapshot.data!.latitude, longitude: snapshot.data!.longitude, accuracy: snapshot.data!.accuracy)),
+                    headingStream: kIsWeb || Platform.isWindows
                         ? Stream.value(LocationMarkerHeading(heading: manualHeadingValue, accuracy: 0.5))
                         : const LocationMarkerDataStreamFactory().fromCompassHeadingStream(),
                     style: const LocationMarkerStyle(
@@ -248,7 +259,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                     destLookupTextController.clear();
                                     destinationCoord = null;
                                     destName = '';
-                                    mapController.move(centerCoord!, 18);
+                                    mapController.move(centerCoord!, mapDefaultZoomValue);
+                                    mapController.rotate(0);
                                     manualHeadingValue = 0.0;
                                     contUpdatePos = false;
                                   } else {
@@ -281,7 +293,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         destName = point.locName;
                         FocusScope.of(context).unfocus();
                         mapController.rotate(0);
-                        mapController.move(point.coord, 18);
+                        mapController.move(point.coord, mapDefaultZoomValue);
                         curPathFindingState = PathFindingState.ready;
                       },
                       suggestionsCallback: (String search) {
@@ -426,7 +438,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     // Total time calc
-    estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, 3)!.pretty(abbreviated: true);
+    estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, defaultWalkingSpeedMPH)!.pretty(abbreviated: true);
 
     // Zoom back to start point for navigation
     // mapController.move(debugCenterCoord, 19);
@@ -437,60 +449,69 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // Floating button
   Widget floatingButtons(context) {
-    return Column(
+    return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Visibility(
-          visible: showDebugButtons,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Wrap(
-              direction: Axis.vertical,
-              spacing: 5,
-              runSpacing: 5,
-              children: [
-                FloatingActionButton.small(
-                    tooltip: showMappingLayer.value ? 'Stop Mapping' : 'Start Mapping',
-                    onPressed: () {
-                      setState(() {
-                        showMappingLayer.value ? showMappingLayer.value = false : showMappingLayer.value = true;
-                        debugPrint(showMappingLayer.toString());
-                      });
-                    },
-                    child: Icon(showMappingLayer.value ? Icons.map : Icons.map_outlined)),
-                FloatingActionButton.small(
-                    tooltip: showExploredPath.value ? 'Hide Explored' : 'Show Explored',
-                    onPressed: () => showExploredPath.value ? showExploredPath.value = false : showExploredPath.value = true,
-                    child: Icon(showExploredPath.value ? Icons.pattern_sharp : Icons.linear_scale_sharp)),
-              ],
-            ),
-          ),
-        ),
-        Wrap(
-          spacing: 10,
-          runSpacing: 5,
+            visible: curPathFindingState == PathFindingState.finished,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: Card(
+                elevation: 5,
+                shape: Theme.of(context).floatingActionButtonTheme.shape,
+                color: Theme.of(context).floatingActionButtonTheme.foregroundColor,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: SizedBox(
+                      height: 25,
+                      child: Text(
+                        'Estimate: ${estimateNavTime.watch(context)}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      )),
+                ),
+              ),
+            )),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
+            Visibility(
+              visible: showDebugButtons,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Wrap(
+                  direction: Axis.vertical,
+                  spacing: 5,
+                  runSpacing: 5,
+                  children: [
+                    FloatingActionButton.small(
+                        tooltip: showMappingLayer.value ? 'Stop Mapping' : 'Start Mapping',
+                        onPressed: () {
+                          setState(() {
+                            showMappingLayer.value ? showMappingLayer.value = false : showMappingLayer.value = true;
+                            debugPrint(showMappingLayer.toString());
+                          });
+                        },
+                        child: Icon(showMappingLayer.value ? Icons.map : Icons.map_outlined)),
+                    FloatingActionButton.small(
+                        tooltip: showExploredPath.value ? 'Hide Explored' : 'Show Explored',
+                        onPressed: () => showExploredPath.value ? showExploredPath.value = false : showExploredPath.value = true,
+                        child: Icon(showExploredPath.value ? Icons.pattern_sharp : Icons.linear_scale_sharp)),
+                  ],
+                ),
+              ),
+            ),
             Visibility(
                 visible: curPathFindingState == PathFindingState.finished,
                 child: Padding(
-                  padding: EdgeInsets.zero,
-                  child: Card(
-                    elevation: 5,
-                    shape: Theme.of(context).floatingActionButtonTheme.shape,
-                    color: Theme.of(context).floatingActionButtonTheme.backgroundColor,
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: SizedBox(
-                          height: 25,
-                          child: Text(
-                            'Estimate: ${estimateNavTime.watch(context)}',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                          )),
-                    ),
-                  ),
-                )),
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: FloatingActionButton.small(
+                        onPressed: () {
+                          mapController.move(centerCoord!, 19);
+                        },
+                        child: const Icon(Icons.gps_fixed_outlined)))),
             GestureDetector(
               onLongPress: () {
                 showDebugButtons ? showDebugButtons = false : showDebugButtons = true;
@@ -499,9 +520,8 @@ class _MyHomePageState extends State<MyHomePage> {
               child: FloatingActionButton(
                   onPressed: () async {
                     if (curPathFindingState == PathFindingState.idle) {
-                      curLocation = await Geolocator.getCurrentPosition();
-                      centerCoord = LatLng(curLocation!.latitude, curLocation!.longitude);
-                      mapController.move(centerCoord!, 18);
+                      mapController.rotate(0);
+                      mapController.move(centerCoord!, mapDefaultZoomValue);
                       manualHeadingValue = 0.0;
                     } else if (curPathFindingState == PathFindingState.finding || curPathFindingState == PathFindingState.finished) {
                       curPathFindingState = PathFindingState.idle;
@@ -510,7 +530,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       destLookupTextController.clear();
                       destinationCoord = null;
                       destName = '';
-                      mapController.move(centerCoord!, 18);
+                      mapController.move(centerCoord!, mapDefaultZoomValue);
+                      mapController.rotate(0);
                       manualHeadingValue = 0.0;
                       contUpdatePos = false;
                       setState(() {});
