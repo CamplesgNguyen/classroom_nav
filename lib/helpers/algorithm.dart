@@ -32,7 +32,7 @@ double calcAvgSpeed(List<double> speeds) {
 }
 
 bool onRouteCheck(List<LatLng> coords) {
-  if (coords.where((e) => Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) < maxNeighborDistance).length > 1) {
+  if (routingCoordCount > coords.length && coords.where((e) => Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) < maxNeighborDistance).length > 1) {
     return false;
   }
   return true;

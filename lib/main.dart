@@ -10,7 +10,6 @@ import 'package:classroom_nav/helpers/classes.dart';
 import 'package:classroom_nav/helpers/custom_marker.dart';
 import 'package:classroom_nav/helpers/enums.dart';
 import 'package:classroom_nav/helpers/json_save.dart';
-import 'package:classroom_nav/helpers/location.dart';
 import 'package:classroom_nav/helpers/popups.dart';
 import 'package:duration/duration.dart';
 import 'package:flutter/foundation.dart';
@@ -437,6 +436,8 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {});
       await Future.delayed(const Duration(milliseconds: 10));
     }
+
+    routingCoordCount = shortestCoordinates.length;
 
     // Total time calc
     estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, defaultWalkingSpeedMPH).pretty(abbreviated: true);
