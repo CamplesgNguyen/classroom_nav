@@ -64,6 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
   TextEditingController destLookupTextController = TextEditingController();
   LocationMarkerHeading? userMarkerHeadingData;
   Stream<Position> positionStream = Geolocator.getPositionStream();
+  bool onRoute = true;
 
   @override
   void initState() {
@@ -110,31 +111,18 @@ class _MyHomePageState extends State<MyHomePage> {
               if (curPathFindingState == PathFindingState.finished) {
                 // Update heading data
                 manualHeadingValue = navMapRotation(shortestCoordinates);
-                // Estimate time recalc
-                if (snapshot.data!.speed > 0.0) {
-                  estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, snapshot.data!.speed.convertFromTo(LENGTH.meters, LENGTH.miles)!.toDouble())!.pretty(abbreviated: true);
-                } else {
-                  estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, defaultWalkingSpeedMPH)!.pretty(abbreviated: true);
+
+                onRoute = onRouteCheck(shortestCoordinates);
+                if (onRoute && shortestCoordinates.length > 1) {
+                  int closestCoordIndex = getShortestCoordIndex(shortestCoordinates);
+                  if (closestCoordIndex != -1) {
+                    shortestCoordinates.removeRange(0, closestCoordIndex);
+                    shortestCoordinates.insert(0, LatLng(centerCoord!.latitude, centerCoord!.longitude));
+                  }
                 }
 
-                // Check onroute
-                if (shortestCoordinates.length >= 2) {
-                  final distanceFromFirst = Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, shortestCoordinates.first.latitude, shortestCoordinates.first.longitude);
-                  final distanceFromSecond = Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, shortestCoordinates[1].latitude, shortestCoordinates[1].longitude);
-                  if (distanceFromSecond < distanceFromFirst) {
-                    shortestCoordinates.removeAt(0);
-                  }
-                  shortestCoordinates.removeAt(0);
-                  shortestCoordinates.insert(0, LatLng(centerCoord!.latitude, centerCoord!.longitude));
-                }
-                bool checkOnRoute = onRouteCheck(shortestCoordinates);
-                if (!checkOnRoute) {
-                  exploredCoordinates.clear();
-                  shortestCoordinates.clear();
-                  curPathFindingState = PathFindingState.finding;
-                  traceRoute(centerCoord!, destinationCoord!);
-                  curPathFindingState = PathFindingState.finished;
-                }
+                // Estimate time recalc
+                estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, defaultWalkingSpeedMPH).pretty(abbreviated: true);
               }
 
               return FlutterMap(
@@ -147,6 +135,20 @@ class _MyHomePageState extends State<MyHomePage> {
                   onMapReady: () {
                     mapDoneLoading = true;
                     setState(() {});
+                  },
+                  onPositionChanged: (camera, hasGesture) async {
+                    // Onroute tracking
+                    if (curPathFindingState == PathFindingState.finished) {
+                      if (!onRoute) {
+                        exploredCoordinates.clear();
+                        shortestCoordinates.clear();
+                        curPathFindingState = PathFindingState.finding;
+                        await traceRoute(centerCoord!, destinationCoord!);
+                        onRoute = onRouteCheck(shortestCoordinates);
+                        curPathFindingState = PathFindingState.finished;
+                        setState(() {});
+                      }
+                    }
                   },
                   onTap: (tapPosition, point) {
                     if (showMappingLayer.value) {
@@ -394,7 +396,6 @@ class _MyHomePageState extends State<MyHomePage> {
     while (exploredPoints.isEmpty || (exploredPoints.last.coord.latitude != destCoord.latitude && exploredPoints.last.coord.longitude != destCoord.longitude)) {
       exploredPoints.add(frontier.removeAt(0));
       exploredCoordinates.add(exploredPoints.last.coord);
-      setState(() {});
       await Future.delayed(const Duration(milliseconds: 50));
       List<CoordPoint> neighborPoints = mappedCoords
           .where((e) => exploredPoints.last.neighborCoords.map((n) => [n.latitude, n.longitude]).where((m) => m.first == e.coord.latitude && m.last == e.coord.longitude).isNotEmpty)
@@ -438,7 +439,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     // Total time calc
-    estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, defaultWalkingSpeedMPH)!.pretty(abbreviated: true);
+    estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, defaultWalkingSpeedMPH).pretty(abbreviated: true);
 
     // Zoom back to start point for navigation
     // mapController.move(debugCenterCoord, 19);

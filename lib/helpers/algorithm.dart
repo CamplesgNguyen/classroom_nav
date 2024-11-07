@@ -21,8 +21,18 @@ List<CoordPoint> getNearbyPoints(LatLng curCoord) {
   return neighborCoords;
 }
 
+double calcAvgSpeed(List<double> speeds) {
+  double total = 0;
+  for (var value in speeds) {
+    total += value;
+  }
+  total = total / speeds.length;
+
+  return total.convertFromTo(LENGTH.meters, LENGTH.miles)! * 2.236936;
+}
+
 bool onRouteCheck(List<LatLng> coords) {
-  if (coords.indexWhere((e) =>e != coords.first &&  Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) < maxNeighborDistance) == -1) {
+  if (coords.indexWhere((e) => e != coords.first && Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) < maxNeighborDistance) == -1) {
     return false;
   }
   return true;
@@ -37,20 +47,23 @@ Future<List<CoordPoint>> suggestionsCallback(String pattern) async => Future<Lis
       }).toList(),
     );
 
-Duration? totalNavTimeCalc(List<LatLng> coords, double avgSpeed) {
-  LatLng prevCoord = coords.first;
-  double distance = 0;
-  for (var coord in coords) {
-    distance += Geolocator.distanceBetween(prevCoord.latitude, prevCoord.longitude, coord.latitude, coord.longitude);
-    prevCoord = coord;
+Duration totalNavTimeCalc(List<LatLng> coords, double avgSpeed) {
+  if (coords.isNotEmpty) {
+    LatLng prevCoord = coords.first;
+    double distance = 0;
+    for (var coord in coords) {
+      distance += Geolocator.distanceBetween(prevCoord.latitude, prevCoord.longitude, coord.latitude, coord.longitude);
+      prevCoord = coord;
+    }
+    double? distanceInMiles = distance.convertFromTo(LENGTH.meters, LENGTH.miles);
+    if (distanceInMiles != null) {
+      double time = distanceInMiles / avgSpeed;
+      return Duration(minutes: time.convertFromTo(TIME.hours, TIME.minutes)!.toInt(), seconds: time.convertFromTo(TIME.hours, TIME.seconds)!.toInt());
+    } else {
+      return const Duration(seconds: 0);
+    }
   }
-  double? distanceInMiles = distance.convertFromTo(LENGTH.meters, LENGTH.miles);
-  if (distanceInMiles != null) {
-    double time = distanceInMiles / avgSpeed;
-    return Duration(minutes: time.convertFromTo(TIME.hours, TIME.minutes)!.toInt(), seconds: time.convertFromTo(TIME.hours, TIME.seconds)!.toInt());
-  } else {
-    return null;
-  }
+  return const Duration(seconds: 0);
 }
 
 // LocationMarkerHeading getNavHeading(List<LatLng> coords, double heading, double accuracy) {
@@ -79,6 +92,27 @@ Duration? totalNavTimeCalc(List<LatLng> coords, double avgSpeed) {
 //     return this;
 //   }
 // }
+
+int getShortestCoordIndex(List<LatLng> coords) {
+  int index = -1;
+  if (coords.isNotEmpty) {
+    LatLng closestCoord = coords.first;
+    double closestDistance = -1;
+    for (var coord in coords) {
+      if (coord == coords.first) continue;
+      double newDistance = Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, coord.latitude, coord.longitude);
+      if (closestDistance == -1 || newDistance < closestDistance) {
+        closestDistance = newDistance;
+        closestCoord = coord;
+      }
+    }
+    if (closestDistance < 5) {
+      index = coords.indexOf(closestCoord);
+    }
+  }
+
+  return index;
+}
 
 double navMapRotation(List<LatLng> coords) {
   if (coords.isNotEmpty) {
