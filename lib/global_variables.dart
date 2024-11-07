@@ -34,5 +34,5 @@ double prevRotationValue = 0.0;
 double manualHeadingValue = 0.0;
 List<LatLng> headingPolyline = [];
 List<double> walkSpeeds = [];
-double initialPathDistance = 0;
 int routingCoordCount = 0;
+bool arrivedAtDest = false;
