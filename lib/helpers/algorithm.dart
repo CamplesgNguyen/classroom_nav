@@ -32,7 +32,7 @@ double calcAvgSpeed(List<double> speeds) {
 }
 
 bool onRouteCheck(List<LatLng> coords) {
-  if (coords.indexWhere((e) => e != coords.first && Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) < maxNeighborDistance) == -1) {
+  if (coords.where((e) => Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) < maxNeighborDistance).length > 1) {
     return false;
   }
   return true;
@@ -65,33 +65,6 @@ Duration totalNavTimeCalc(List<LatLng> coords, double avgSpeed) {
   }
   return const Duration(seconds: 0);
 }
-
-// LocationMarkerHeading getNavHeading(List<LatLng> coords, double heading, double accuracy) {
-//   LatLng closestCoord = coords.first;
-//   double closestDistance = -1;
-//   for (var coord in coords) {
-//     double newDistance = Geolocator.distanceBetween(closestCoord.latitude, closestCoord.longitude, coord.latitude, coord.longitude);
-//     if (coord == coords.first) continue;
-//     if (closestDistance == -1 || newDistance < closestDistance) {
-//       closestDistance = newDistance;
-//       closestCoord = coord;
-//     }
-//   }
-
-//   double newHeadingAngle = Geolocator.bearingBetween(centerCoord!.latitude, centerCoord!.longitude, closestCoord.latitude, closestCoord.longitude).bounded;
-
-//   debugPrint('Heading: $heading | New heading: ${-heading + degToRadian(newHeadingAngle)} | Acc: $accuracy');
-//   return LocationMarkerHeading(heading: -heading + degToRadian(newHeadingAngle), accuracy: accuracy);
-// }
-
-// extension on double {
-//   double get bounded {
-//     if (this > 180) {
-//       return this - 360;
-//     }
-//     return this;
-//   }
-// }
 
 int getShortestCoordIndex(List<LatLng> coords) {
   int index = -1;
@@ -128,48 +101,9 @@ double navMapRotation(List<LatLng> coords) {
     }
 
     double newHeadingAngle = Geolocator.bearingBetween(centerCoord!.latitude, centerCoord!.longitude, closestCoord.latitude, closestCoord.longitude);
-    //   if (prevRotationValue != newHeadingAngle) {
-    //     if (prevRotationValue == 0.0) {
-    //       prevRotationValue = degToRadian(newHeadingAngle);
-    //       debugPrint('Heading: $prevRotationValue');
-    //       return prevRotationValue;
-    //     } else if (newHeadingAngle > prevRotationValue) {
-    //       prevRotationValue = degToRadian(newHeadingAngle) - prevRotationValue;
-    //       return prevRotationValue;
-    //     } else if (newHeadingAngle < prevRotationValue) {
-    //       prevRotationValue = degToRadian(prevRotationValue - newHeadingAngle);
-    //       return prevRotationValue;
-    //     }
-    //   }
-    // }
     return degToRadian(newHeadingAngle);
   }
 
   return prevRotationValue;
 }
 
-// Stream<LocationMarkerHeading?> getHeadingFromData() async* {
-//   double directionDegrees = 0.0;
-//   magnetometerEventStream(samplingPeriod: SensorInterval.normalInterval).listen(
-//     (MagnetometerEvent event) {
-//       // Calculate direction in radians
-//       double directionRadians = math.atan2(event.y, event.x);
-
-//       // Convert radians to degrees
-//       directionDegrees = directionRadians * (180 / math.pi);
-
-//       // Adjust angle to be relative to true north
-//       directionDegrees -= 90.0;
-//       if (directionDegrees < 0) {
-//         directionDegrees += 360.0; // Ensure angle is within the range [0, 360)
-//       }
-//     },
-//     onError: (error) {
-//       debugPrint('Error fetching magnetometer data: $error');
-//     },
-//     cancelOnError: true,
-//   );
-//   debugPrint(directionDegrees.toString());
-
-//   yield LocationMarkerHeading(heading: directionDegrees, accuracy: 0.5);
-// }
