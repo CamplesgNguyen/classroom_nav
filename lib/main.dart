@@ -110,12 +110,19 @@ class _MyHomePageState extends State<MyHomePage> {
                 // Update heading data
                 manualHeadingValue = navMapRotation(shortestCoordinates);
 
+                if (Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.latitude, shortestCoordinates.last.latitude, shortestCoordinates.last.longitude) <= 5) {
+                  arrivedAtDest = true;
+                } else {
+                  arrivedAtDest = false;
+                }
+
                 onRoute = onRouteCheck(shortestCoordinates);
                 if (onRoute && shortestCoordinates.length > 1) {
                   int closestCoordIndex = getShortestCoordIndex(shortestCoordinates);
                   if (closestCoordIndex != -1) {
                     shortestCoordinates.removeRange(0, closestCoordIndex);
                     shortestCoordinates.insert(0, LatLng(centerCoord!.latitude, centerCoord!.longitude));
+                    routingCoordCount = shortestCoordinates.length;
                   }
                 }
 
@@ -138,6 +145,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     // Onroute tracking
                     if (curPathFindingState == PathFindingState.finished) {
                       if (!onRoute) {
+                        contUpdatePos = false;
                         exploredCoordinates.clear();
                         shortestCoordinates.clear();
                         curPathFindingState = PathFindingState.finding;
@@ -460,15 +468,16 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Padding(
               padding: const EdgeInsets.only(right: 10),
               child: Card(
+                margin: EdgeInsets.zero,
                 elevation: 5,
                 shape: Theme.of(context).floatingActionButtonTheme.shape,
                 color: Theme.of(context).floatingActionButtonTheme.foregroundColor,
                 child: Padding(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(5),
                   child: SizedBox(
                       height: 25,
                       child: Text(
-                        'Estimate: ${estimateNavTime.watch(context)}',
+                        arrivedAtDest ? 'Arrived!' : 'Estimate: ${estimateNavTime.watch(context)}',
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                       )),
@@ -514,6 +523,22 @@ class _MyHomePageState extends State<MyHomePage> {
                           mapController.move(centerCoord!, 19);
                         },
                         child: const Icon(Icons.gps_fixed_outlined)))),
+            Visibility(
+                visible: curPathFindingState == PathFindingState.finished,
+                child: Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: FloatingActionButton.small(
+                        onPressed: () async {
+                          contUpdatePos = false;
+                          exploredCoordinates.clear();
+                          shortestCoordinates.clear();
+                          curPathFindingState = PathFindingState.finding;
+                          await traceRoute(centerCoord!, destinationCoord!);
+                          curPathFindingState = PathFindingState.finished;
+                          contUpdatePos = true;
+                          setState(() {});
+                        },
+                        child: const Icon(Icons.route_outlined)))),
             GestureDetector(
               onLongPress: () {
                 showDebugButtons ? showDebugButtons = false : showDebugButtons = true;
@@ -537,12 +562,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       manualHeadingValue = 0.0;
                       contUpdatePos = false;
                     } else {
-                      // await getPathCoords(LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()), const LatLng(33.88218882346271, -117.88254123765721));
                       exploredCoordinates.clear();
                       shortestCoordinates.clear();
                       curPathFindingState = PathFindingState.finding;
                       setState(() {});
-                      // await traceRoute(debugCenterCoord, destinationCoord!);
                       await traceRoute(centerCoord!, destinationCoord!);
                       curPathFindingState = PathFindingState.finished;
                       contUpdatePos = true;
