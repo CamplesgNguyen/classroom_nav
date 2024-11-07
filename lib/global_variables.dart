@@ -33,3 +33,4 @@ bool contUpdatePos = false;
 double prevRotationValue = 0.0;
 double manualHeadingValue = 0.0;
 List<LatLng> headingPolyline = [];
+List<double> walkSpeeds = [];
