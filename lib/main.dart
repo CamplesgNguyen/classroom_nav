@@ -21,7 +21,6 @@ import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:location/location.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:units_converter/models/extension_converter.dart';
@@ -63,12 +62,12 @@ class _MyHomePageState extends State<MyHomePage> {
   List<LatLng> shortestCoordinates = [];
   TextEditingController destLookupTextController = TextEditingController();
   LocationMarkerHeading? userMarkerHeadingData;
-  Stream<Position> positionStream = Geolocator.getPositionStream();
+  Stream<Position> positionStream = Geolocator.getPositionStream(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 1));
   bool onRoute = true;
 
   @override
   void initState() {
-    getLocationServicePerm();
+    // getLocationServicePerm();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Load mapped markers
       mappedMakers = kIsWeb
@@ -205,7 +204,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   CurrentLocationLayer(
                     alignPositionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
                     alignDirectionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
-                    positionStream: Stream.value(LocationMarkerPosition(latitude: snapshot.data!.latitude, longitude: snapshot.data!.longitude, accuracy: snapshot.data!.accuracy)),
+                    positionStream: Stream.value(LocationMarkerPosition(latitude: centerCoord!.latitude, longitude: centerCoord!.longitude, accuracy: snapshot.data!.accuracy)),
                     headingStream: kIsWeb || Platform.isWindows
                         ? Stream.value(LocationMarkerHeading(heading: manualHeadingValue, accuracy: 0.5))
                         : const LocationMarkerDataStreamFactory().fromCompassHeadingStream(),
@@ -396,7 +395,8 @@ class _MyHomePageState extends State<MyHomePage> {
     while (exploredPoints.isEmpty || (exploredPoints.last.coord.latitude != destCoord.latitude && exploredPoints.last.coord.longitude != destCoord.longitude)) {
       exploredPoints.add(frontier.removeAt(0));
       exploredCoordinates.add(exploredPoints.last.coord);
-      await Future.delayed(const Duration(milliseconds: 50));
+      setState(() {});
+      await Future.delayed(const Duration(milliseconds: 10));
       List<CoordPoint> neighborPoints = mappedCoords
           .where((e) => exploredPoints.last.neighborCoords.map((n) => [n.latitude, n.longitude]).where((m) => m.first == e.coord.latitude && m.last == e.coord.longitude).isNotEmpty)
           .toList();
@@ -435,7 +435,7 @@ class _MyHomePageState extends State<MyHomePage> {
     while (backTrack.isNotEmpty) {
       shortestCoordinates.add(backTrack.removeLast().coord);
       setState(() {});
-      await Future.delayed(const Duration(milliseconds: 50));
+      await Future.delayed(const Duration(milliseconds: 10));
     }
 
     // Total time calc
@@ -535,12 +535,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       mapController.rotate(0);
                       manualHeadingValue = 0.0;
                       contUpdatePos = false;
-                      setState(() {});
                     } else {
                       // await getPathCoords(LatLng(curLocation!.latitude.toDouble(), curLocation!.longitude.toDouble()), const LatLng(33.88218882346271, -117.88254123765721));
                       exploredCoordinates.clear();
                       shortestCoordinates.clear();
                       curPathFindingState = PathFindingState.finding;
+                      setState(() {});
                       // await traceRoute(debugCenterCoord, destinationCoord!);
                       await traceRoute(centerCoord!, destinationCoord!);
                       curPathFindingState = PathFindingState.finished;
