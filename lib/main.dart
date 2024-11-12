@@ -251,12 +251,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       builder: (context, controller, focusNode) => TextField(
                         controller: controller,
                         focusNode: focusNode,
-                        autofocus: true,
+                        autofocus: false,
                         style: DefaultTextStyle.of(context).style.copyWith(fontStyle: FontStyle.italic),
                         decoration: InputDecoration(
                             filled: true,
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                            hintText: 'Enter room name',
+                            hintText: 'Enter destination',
                             suffixIcon: IconButton(
                                 onPressed: () {
                                   if (destLookupTextController.text.isEmpty) {
