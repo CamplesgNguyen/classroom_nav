@@ -220,11 +220,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
 
-                  // Map Maker intertest point
+                  // Map Markers for intertest point
                   Visibility(
                       visible: destinationCoord != null,
                       child: MarkerLayer(
-                          alignment: Alignment.center, rotate: true, markers: [if (destinationCoord != null) Marker(width: 80, height: 80, point: destinationCoord!, child: LabelMarker(destName))])),
+                          alignment: Alignment.center, rotate: true, markers: [if (destinationCoord != null) Marker(width: destName.length > 9 ? destName.length * 9 : 100, height: 80, point: destinationCoord!, child: LabelMarker(destName))])),
 
                   //Mapped markers
                   Visibility(
@@ -334,7 +334,7 @@ class _MyHomePageState extends State<MyHomePage> {
         });
   }
 
-  //load mapped coords
+  // Load mapped coords
   Future<List<Marker>> loadMappedMarkers(String jsonPath) async {
     List<Marker> markers = [];
     String markersFromJson = kIsWeb || Platform.isAndroid ? await rootBundle.loadString(jsonPath) : await File(jsonPath).readAsString();
@@ -351,7 +351,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return markers;
   }
 
-  //Mapping Marker
+  // Mapping Marker
   Marker mappingMaker(LatLng point, bool? isREntrance, bool? isBEntrance, bool? isStairs, bool? isEvevators) {
     return Marker(
         width: 15,
@@ -390,7 +390,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ));
   }
 
-  // Algorithm
+  // A* Algorithm
   Future<void> traceRoute(LatLng startCoord, LatLng destCoord) async {
     List<CoordPoint> exploredPoints = [];
     List<CoordPoint> frontier = [CoordPoint(startCoord, getNearbyPoints(startCoord).map((e) => e.coord).toList())];
