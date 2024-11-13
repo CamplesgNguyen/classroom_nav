@@ -120,7 +120,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 if (onRoute && shortestCoordinates.length > 1) {
                   int closestCoordIndex = getShortestCoordIndex(shortestCoordinates);
                   if (closestCoordIndex != -1) {
-                    shortestCoordinates.removeRange(0, closestCoordIndex);
+                    shortestCoordinates.removeAt(0);
+                    shortestCoordinates.removeRange(1, closestCoordIndex);
                     shortestCoordinates.insert(0, LatLng(centerCoord!.latitude, centerCoord!.longitude));
                     routingCoordCount = shortestCoordinates.length;
                   }
@@ -212,7 +213,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     alignPositionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
                     alignDirectionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
                     positionStream: Stream.value(LocationMarkerPosition(latitude: centerCoord!.latitude, longitude: centerCoord!.longitude, accuracy: snapshot.data!.accuracy)),
-                    headingStream: kIsWeb || Platform.isWindows
+                    headingStream: curPathFindingState == PathFindingState.finished && (kIsWeb || Platform.isWindows)
                         ? Stream.value(LocationMarkerHeading(heading: manualHeadingValue, accuracy: 0.5))
                         : const LocationMarkerDataStreamFactory().fromCompassHeadingStream(),
                     style: const LocationMarkerStyle(
@@ -224,7 +225,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   Visibility(
                       visible: destinationCoord != null,
                       child: MarkerLayer(
-                          alignment: Alignment.center, rotate: true, markers: [if (destinationCoord != null) Marker(width: destName.length > 9 ? destName.length * 9 : 100, height: 80, point: destinationCoord!, child: LabelMarker(destName))])),
+                          alignment: Alignment.center,
+                          rotate: true,
+                          markers: [if (destinationCoord != null) Marker(width: destName.length > 9 ? destName.length * 9 : 100, height: 80, point: destinationCoord!, child: LabelMarker(destName))])),
 
                   //Mapped markers
                   Visibility(

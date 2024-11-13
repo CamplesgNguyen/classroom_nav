@@ -2219,6 +2219,12 @@
           -117.88389117022462,
           33.87913293517273
         ]
+      },
+      {
+        "coordinates": [
+          -117.88380140921568,
+          33.87911586495985
+        ]
       }
     ]
   },
@@ -2519,6 +2525,12 @@
           -117.88453179314044,
           33.87912780671043
         ]
+      },
+      {
+        "coordinates": [
+          -117.88458673876535,
+          33.879181398438185
+        ]
       }
     ]
   },
@@ -2552,6 +2564,12 @@
           -117.8835525810364,
           33.878803069732925
         ]
+      },
+      {
+        "coordinates": [
+          -117.8835358705232,
+          33.878880936015925
+        ]
       }
     ]
   },
@@ -2578,6 +2596,12 @@
         "coordinates": [
           -117.88365064915831,
           33.878803721953325
+        ]
+      },
+      {
+        "coordinates": [
+          -117.8835358705232,
+          33.878880936015925
         ]
       }
     ]
@@ -2969,6 +2993,12 @@
           -117.88452491334276,
           33.87917262500908
         ]
+      },
+      {
+        "coordinates": [
+          -117.88458673876535,
+          33.879181398438185
+        ]
       }
     ]
   },
@@ -3329,6 +3359,12 @@
           -117.8840882197423,
           33.87997477916652
         ]
+      },
+      {
+        "coordinates": [
+          -117.88408304116732,
+          33.88003887336441
+        ]
       }
     ]
   },
@@ -3359,8 +3395,14 @@
       },
       {
         "coordinates": [
-          -117.88412981992236,
-          33.879921732232766
+          -117.88408304116732,
+          33.88003887336441
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88418088147425,
+          33.87993626924971
         ]
       }
     ]
@@ -3388,6 +3430,24 @@
         "coordinates": [
           -117.88424613789745,
           33.88004162916648
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88412729761608,
+          33.880095656426306
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88408304116732,
+          33.88003887336441
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88418088147425,
+          33.87993626924971
         ]
       }
     ]
@@ -3476,6 +3536,12 @@
           -117.8844727845619,
           33.88006278364445
         ]
+      },
+      {
+        "coordinates": [
+          -117.88437534162784,
+          33.879931815669266
+        ]
       }
     ]
   },
@@ -3530,6 +3596,12 @@
           -117.8846350582073,
           33.87995812459791
         ]
+      },
+      {
+        "coordinates": [
+          -117.88461003491663,
+          33.87989396022619
+        ]
       }
     ]
   },
@@ -3562,6 +3634,12 @@
         "coordinates": [
           -117.88462298826673,
           33.88003828898548
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88461003491663,
+          33.87989396022619
         ]
       }
     ]
@@ -3661,6 +3739,12 @@
         "coordinates": [
           -117.88455459193685,
           33.88008171133064
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88444916269786,
+          33.88013907874226
         ]
       }
     ]
@@ -4781,6 +4865,12 @@
           -117.88494171763374,
           33.879232386972305
         ]
+      },
+      {
+        "coordinates": [
+          -117.88489921611558,
+          33.87918919227232
+        ]
       }
     ]
   },
@@ -4807,6 +4897,12 @@
         "coordinates": [
           -117.88494425955362,
           33.87929358676662
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88489921611558,
+          33.87918919227232
         ]
       }
     ]
@@ -9806,33 +9902,6 @@
   {
     "coord": {
       "coordinates": [
-        -117.88412981992236,
-        33.879921732232766
-      ]
-    },
-    "locName": "",
-    "isBEntrancePoint": false,
-    "isREntrancePoint": false,
-    "isStairsPoint": false,
-    "isElevatorsPoint": false,
-    "neighborCoords": [
-      {
-        "coordinates": [
-          -117.8840882197423,
-          33.87997477916652
-        ]
-      },
-      {
-        "coordinates": [
-          -117.88413317156974,
-          33.87988555890069
-        ]
-      }
-    ]
-  },
-  {
-    "coord": {
-      "coordinates": [
         -117.88413317156974,
         33.87988555890069
       ]
@@ -9845,8 +9914,8 @@
     "neighborCoords": [
       {
         "coordinates": [
-          -117.88412981992236,
-          33.879921732232766
+          -117.88418088147425,
+          33.87993626924971
         ]
       }
     ]
@@ -18587,6 +18656,12 @@
           -117.88444709170014,
           33.879529136456
         ]
+      },
+      {
+        "coordinates": [
+          -117.8845786921383,
+          33.87955550167441
+        ]
       }
     ]
   },
@@ -18613,6 +18688,18 @@
         "coordinates": [
           -117.88464593736471,
           33.87965568041404
+        ]
+      },
+      {
+        "coordinates": [
+          -117.8845786921383,
+          33.87955550167441
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88465245288621,
+          33.87955327487429
         ]
       }
     ]
@@ -18694,6 +18781,18 @@
         "coordinates": [
           -117.88482762190108,
           33.8797539672814
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88479778954768,
+          33.879666827215004
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88470659444118,
+          33.87979486795742
         ]
       }
     ]
@@ -18815,6 +18914,12 @@
           -117.88495187068122,
           33.87953501123575
         ]
+      },
+      {
+        "coordinates": [
+          -117.88489519280206,
+          33.87954770787373
+        ]
       }
     ]
   },
@@ -18842,6 +18947,12 @@
           -117.88495187068122,
           33.87958366818343
         ]
+      },
+      {
+        "coordinates": [
+          -117.88489519280206,
+          33.87954770787373
+        ]
       }
     ]
   },
@@ -18868,6 +18979,12 @@
         "coordinates": [
           -117.88495304283953,
           33.879638163931894
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88489519280206,
+          33.87954770787373
         ]
       }
     ]
@@ -19729,6 +19846,12 @@
         "coordinates": [
           -117.88455723003881,
           33.88022156343517
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88444916269786,
+          33.88013907874226
         ]
       }
     ]
@@ -21527,6 +21650,12 @@
           -117.88417935207656,
           33.88029717343474
         ]
+      },
+      {
+        "coordinates": [
+          -117.88415546081072,
+          33.88026155182206
+        ]
       }
     ]
   },
@@ -21554,6 +21683,18 @@
           -117.88424966910362,
           33.88030424949257
         ]
+      },
+      {
+        "coordinates": [
+          -117.88421581051355,
+          33.88023928400245
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88415546081072,
+          33.88026155182206
+        ]
       }
     ]
   },
@@ -21574,6 +21715,18 @@
         "coordinates": [
           -117.88417935207656,
           33.88029717343474
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88421581051355,
+          33.88023928400245
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88415546081072,
+          33.88026155182206
         ]
       }
     ]
@@ -60519,6 +60672,12 @@
           -117.88393274446433,
           33.879075038063846
         ]
+      },
+      {
+        "coordinates": [
+          -117.88380140921568,
+          33.87911586495985
+        ]
       }
     ]
   },
@@ -61868,6 +62027,1076 @@
         "coordinates": [
           -117.88578233557811,
           33.87863367325388
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88678615015417,
+        33.88020628152001
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": []
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88458673876535,
+        33.879181398438185
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88452491334276,
+          33.87917262500908
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88453179314044,
+          33.87912780671043
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88465245288621,
+          33.87919030567716
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88465245288621,
+        33.87919030567716
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88458673876535,
+          33.879181398438185
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88470743817102,
+          33.87919253248675
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88470743817102,
+        33.87919253248675
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88465245288621,
+          33.87919030567716
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88477047008287,
+          33.87919030567716
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88477047008287,
+        33.87919030567716
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88470743817102,
+          33.87919253248675
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88484154862176,
+          33.87918696546266
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88484154862176,
+        33.87918696546266
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88477047008287,
+          33.87919030567716
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88489921611558,
+          33.87918919227232
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88489921611558,
+        33.87918919227232
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88494044667215,
+          33.8791500837308
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88494171763374,
+          33.879232386972305
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88484154862176,
+          33.87918696546266
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.8845786921383,
+        33.87955550167441
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88454513175007,
+          33.879516521586794
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88459670671656,
+          33.879582695043716
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88465245288621,
+          33.87955327487429
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88465245288621,
+        33.87955327487429
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88459670671656,
+          33.879582695043716
+        ]
+      },
+      {
+        "coordinates": [
+          -117.8845786921383,
+          33.87955550167441
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88473828357469,
+          33.87955661507445
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88473828357469,
+        33.87955661507445
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88465245288621,
+          33.87955327487429
+        ]
+      },
+      {
+        "coordinates": [
+          -117.8848267964722,
+          33.87955661507445
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.8848267964722,
+        33.87955661507445
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88473828357469,
+          33.87955661507445
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88489519280206,
+          33.87954770787373
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88489519280206,
+        33.87954770787373
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88494952636466,
+          33.87947856914166
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88495187068122,
+          33.87953501123575
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88495187068122,
+          33.87958366818343
+        ]
+      },
+      {
+        "coordinates": [
+          -117.8848267964722,
+          33.87955661507445
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88485948035503,
+          33.879616724263485
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88380140921568,
+        33.87911586495985
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88384345137413,
+          33.87916502981448
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88389117022462,
+          33.87913293517273
+        ]
+      },
+      {
+        "coordinates": [
+          -117.8837517883489,
+          33.87906910190407
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.8837517883489,
+        33.87906910190407
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88380140921568,
+          33.87911586495985
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88370216748213,
+          33.879023452229696
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88370216748213,
+        33.879023452229696
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.8837517883489,
+          33.87906910190407
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88364986440634,
+          33.87897780253087
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88364986440634,
+        33.87897780253087
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88370216748213,
+          33.879023452229696
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88360024353955,
+          33.87893437962397
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88360024353955,
+        33.87893437962397
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88364986440634,
+          33.87897780253087
+        ]
+      },
+      {
+        "coordinates": [
+          -117.8835358705232,
+          33.878880936015925
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.8835358705232,
+        33.878880936015925
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88348809635815,
+          33.87882511412074
+        ]
+      },
+      {
+        "coordinates": [
+          -117.8835525810364,
+          33.878803069732925
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88360024353955,
+          33.87893437962397
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88444916269786,
+        33.88013907874226
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.8844727845619,
+          33.88006278364445
+        ]
+      },
+      {
+        "coordinates": [
+          -117.8845494449288,
+          33.880137319964476
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88436601421839,
+          33.880169140332676
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88436601421839,
+        33.880169140332676
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88444916269786,
+          33.88013907874226
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88428152463442,
+          33.880206995653694
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88428152463442,
+        33.880206995653694
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88436601421839,
+          33.880169140332676
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88421581051355,
+          33.88023928400245
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88421581051355,
+        33.88023928400245
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88417935207656,
+          33.88029717343474
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88424966910362,
+          33.88030424949257
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88428152463442,
+          33.880206995653694
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88415546081072,
+          33.88026155182206
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88417289516931,
+          33.880174707292696
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88415546081072,
+        33.88026155182206
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88408772685949,
+          33.88029363540561
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88417935207656,
+          33.88029717343474
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88424966910362,
+          33.88030424949257
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88421581051355,
+          33.88023928400245
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88417289516931,
+          33.880174707292696
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88417289516931,
+        33.880174707292696
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88421581051355,
+          33.88023928400245
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88415546081072,
+          33.88026155182206
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88412729761608,
+          33.880095656426306
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88412729761608,
+        33.880095656426306
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88417954286636,
+          33.88001878820483
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88417289516931,
+          33.880174707292696
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88408304116732,
+          33.88003887336441
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88408304116732,
+        33.88003887336441
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88402787003946,
+          33.879997047055156
+        ]
+      },
+      {
+        "coordinates": [
+          -117.8840882197423,
+          33.87997477916652
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88417954286636,
+          33.88001878820483
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88412729761608,
+          33.880095656426306
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88437534162784,
+        33.879931815669266
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88446473793485,
+          33.87998150588542
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88434315511965,
+          33.87990732097274
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88418088147425,
+        33.87993626924971
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.8840882197423,
+          33.87997477916652
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88417954286636,
+          33.88001878820483
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88413317156974,
+          33.87988555890069
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88427207658076,
+          33.87989730041301
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88427207658076,
+        33.87989730041301
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88418088147425,
+          33.87993626924971
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88434315511965,
+          33.87990732097274
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88434315511965,
+        33.87990732097274
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88437534162784,
+          33.879931815669266
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88427207658076,
+          33.87989730041301
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88461003491663,
+        33.87989396022619
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88455727414588,
+          33.879930289723525
+        ]
+      },
+      {
+        "coordinates": [
+          -117.8846350582073,
+          33.87995812459791
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88465429136538,
+          33.87985053778551
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88485948035503,
+        33.879616724263485
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88489519280206,
+          33.87954770787373
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88479778954768,
+          33.879666827215004
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88479778954768,
+        33.879666827215004
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88474205434596,
+          33.879714068665955
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88485948035503,
+          33.879616724263485
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88470659444118,
+        33.87979486795742
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88474205434596,
+          33.879714068665955
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88465429136538,
+          33.87985053778551
+        ]
+      }
+    ]
+  },
+  {
+    "coord": {
+      "coordinates": [
+        -117.88465429136538,
+        33.87985053778551
+      ]
+    },
+    "locName": "",
+    "isBEntrancePoint": false,
+    "isREntrancePoint": false,
+    "isStairsPoint": false,
+    "isElevatorsPoint": false,
+    "neighborCoords": [
+      {
+        "coordinates": [
+          -117.88461003491663,
+          33.87989396022619
+        ]
+      },
+      {
+        "coordinates": [
+          -117.88470659444118,
+          33.87979486795742
         ]
       }
     ]
