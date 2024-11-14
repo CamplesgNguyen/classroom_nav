@@ -66,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    // getLocationServicePerm();
+    getLocationPerm();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Load mapped markers
       mappedMakers = kIsWeb

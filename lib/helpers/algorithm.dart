@@ -110,3 +110,11 @@ double navMapRotation(List<LatLng> coords) {
 
   return prevRotationValue;
 }
+
+Future<void> getLocationPerm() async {
+  LocationPermission permission = await Geolocator.checkPermission();
+
+  if (permission == LocationPermission.always || permission != LocationPermission.whileInUse) {
+    await Geolocator.requestPermission();
+  }
+}
