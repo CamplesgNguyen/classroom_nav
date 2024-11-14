@@ -120,8 +120,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 if (onRoute && shortestCoordinates.length > 1) {
                   int closestCoordIndex = getShortestCoordIndex(shortestCoordinates);
                   if (closestCoordIndex != -1) {
-                    shortestCoordinates.removeAt(0);
-                    shortestCoordinates.removeRange(1, closestCoordIndex);
+                    shortestCoordinates.removeWhere((e) =>
+                        routingCoordCount > shortestCoordinates.length && Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) <= maxNeighborDistance);
                     shortestCoordinates.insert(0, LatLng(centerCoord!.latitude, centerCoord!.longitude));
                     routingCoordCount = shortestCoordinates.length;
                   }

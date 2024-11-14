@@ -31,6 +31,10 @@ double calcAvgSpeed(List<double> speeds) {
   return total.convertFromTo(LENGTH.meters, LENGTH.miles)! * 2.236936;
 }
 
+List<LatLng> getCoordsInRange(List<LatLng> coords) {
+  return coords.where((e) => routingCoordCount > coords.length && Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) < maxNeighborDistance).toList();
+}
+
 bool onRouteCheck(List<LatLng> coords) {
   if (routingCoordCount > coords.length && coords.where((e) => Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) < maxNeighborDistance).length > 1) {
     return false;
@@ -106,4 +110,3 @@ double navMapRotation(List<LatLng> coords) {
 
   return prevRotationValue;
 }
-
