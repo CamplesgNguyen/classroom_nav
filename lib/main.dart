@@ -63,10 +63,11 @@ class _MyHomePageState extends State<MyHomePage> {
   LocationMarkerHeading? userMarkerHeadingData;
   Stream<Position> positionStream = Geolocator.getPositionStream(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 1));
   bool onRoute = true;
+  Signal headingAccuracy = Signal<double>(0.0);
 
   @override
   void initState() {
-    // getLocationServicePerm();
+    // locPermission = await checkLocationPerm();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Load mapped markers
       mappedMakers = kIsWeb
@@ -76,6 +77,33 @@ class _MyHomePageState extends State<MyHomePage> {
               : await loadMappedMarkers(mappedCoordsJsonPath);
     });
     super.initState();
+  }
+
+  Future<bool> checkLocationPerm() async {
+    LocationPermission perm = await Geolocator.checkPermission();
+    if (perm == LocationPermission.always || perm == LocationPermission.whileInUse) {
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> requestLocationPerm() async {
+    await Geolocator.requestPermission();
+  }
+
+  void routingFinish() {
+    curPathFindingState = PathFindingState.idle;
+    exploredCoordinates.clear();
+    shortestCoordinates.clear();
+    destLookupTextController.clear();
+    destinationCoord = null;
+    destName = '';
+    mapController.move(centerCoord!, mapDefaultZoomValue);
+    mapController.rotate(0);
+    manualHeadingValue = 0.0;
+    headingAccuracy.value = 0.0;
+    contUpdatePos = false;
+    setState(() {});
   }
 
   @override
@@ -91,250 +119,253 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // Map
   Widget mapView() {
-    return StreamBuilder(
-        stream: positionStream, // Get current lat & longtitude
-        builder: (ctx, snapshot) {
-          if (snapshot.connectionState == ConnectionState.active) {
-            if (snapshot.hasError) {
-              return Center(
-                child: Text(
-                  '${snapshot.error} occurred',
-                  style: const TextStyle(fontSize: 18),
-                ),
-              );
-            } else {
-              // Set center
-              centerCoord = LatLng(snapshot.data!.latitude, snapshot.data!.longitude);
-              // Other algorithms
-              if (curPathFindingState == PathFindingState.finished) {
-                // Update heading data
-                manualHeadingValue = navMapRotation(shortestCoordinates);
-
-                if (Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.latitude, shortestCoordinates.last.latitude, shortestCoordinates.last.longitude) <= 5) {
-                  arrivedAtDest = true;
-                } else {
-                  arrivedAtDest = false;
-                }
-
-                onRoute = onRouteCheck(shortestCoordinates);
-                if (onRoute && shortestCoordinates.length > 1) {
-                  int closestCoordIndex = getShortestCoordIndex(shortestCoordinates);
-                  if (closestCoordIndex != -1) {
-                    shortestCoordinates.removeWhere((e) =>
-                        routingCoordCount > shortestCoordinates.length && Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) <= maxNeighborDistance);
-                    shortestCoordinates.insert(0, LatLng(centerCoord!.latitude, centerCoord!.longitude));
-                    routingCoordCount = shortestCoordinates.length;
-                  }
-                }
-
-                // Estimate time recalc
-                estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, defaultWalkingSpeedMPH).pretty(abbreviated: true);
-              }
-
-              return FlutterMap(
-                mapController: mapController,
-                options: MapOptions(
-                  initialCenter: centerCoord!,
-                  initialZoom: mapDefaultZoomValue,
-                  maxZoom: mapMaxZoomValue,
-                  cameraConstraint: CameraConstraint.containCenter(bounds: LatLngBounds(const LatLng(33.8892181509212, -117.89024039406391), const LatLng(33.87568283383185, -117.87979836324752))),
-                  onMapReady: () {
-                    mapDoneLoading = true;
-                    setState(() {});
-                  },
-                  onPositionChanged: (camera, hasGesture) async {
-                    // Onroute tracking
+    return FutureBuilder(
+      future: checkLocationPerm(),
+      builder: (context, permSnapshot) {
+        if (permSnapshot.hasData && permSnapshot.data == true) {
+          return StreamBuilder(
+              stream: positionStream, // Get current lat & longtitude
+              builder: (ctx, snapshot) {
+                if (snapshot.connectionState == ConnectionState.active) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        '${snapshot.error} occurred',
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                    );
+                  } else {
+                    // Set center
+                    centerCoord = LatLng(snapshot.data!.latitude, snapshot.data!.longitude);
+                    // Other algorithms
                     if (curPathFindingState == PathFindingState.finished) {
-                      if (!onRoute) {
-                        contUpdatePos = false;
-                        exploredCoordinates.clear();
-                        shortestCoordinates.clear();
-                        curPathFindingState = PathFindingState.finding;
-                        await traceRoute(centerCoord!, destinationCoord!);
-                        onRoute = onRouteCheck(shortestCoordinates);
-                        curPathFindingState = PathFindingState.finished;
-                        setState(() {});
+                      // Update heading data
+                      manualHeadingValue = navMapRotation(shortestCoordinates);
+
+                      if (Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.latitude, shortestCoordinates.last.latitude, shortestCoordinates.last.longitude) <= 5) {
+                        arrivedAtDest = true;
+                        routingFinish();
+                      } else {
+                        arrivedAtDest = false;
                       }
+
+                      updateRoute(shortestCoordinates);
+
+                      // Estimate time recalc
+                      estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, defaultWalkingSpeedMPH).pretty(abbreviated: true);
                     }
-                  },
-                  onTap: (tapPosition, point) {
-                    if (showMappingLayer.value) {
-                      mappedMakers.add(mappingMaker(point, false, false, false, false));
-                      // Get neighbors
-                      mappedCoords.add(CoordPoint(
-                          point,
-                          mappedCoords
-                              .where((e) => Geolocator.distanceBetween(point.latitude, point.longitude, e.coord.latitude, e.coord.longitude) <= maxNeighborDistance)
-                              .map((e) => e.coord)
-                              .toList()));
-                      for (var coord in mappedCoords.last.neighborCoords) {
-                        CoordPoint neighbor = mappedCoords.firstWhere((e) => e.coord.latitude == coord.latitude && e.coord.longitude == coord.longitude);
-                        if (neighbor.neighborCoords.indexWhere((e) => e.latitude == point.latitude && e.longitude == point.longitude) == -1) {
-                          neighbor.neighborCoords.add(point);
-                        }
-                      }
-                      mappedPaths.addAll(mappedCoords.last.neighborCoords.map((e) => Polyline(points: [mappedCoords.last.coord, e], strokeWidth: 5, color: Colors.purple)));
-                      //Save
-                      mappedCoordSave();
-                      setState(() {});
-                    }
-                  },
-                ),
-                children: [
-                  TileLayer(
-                    // Display map tiles from osm
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', // OSMF's Tile Server
-                    userAgentPackageName: 'com.campusnav.app',
-                    tileBounds: LatLngBounds(const LatLng(33.8892181509212, -117.89024039406391), const LatLng(33.87568283383185, -117.87979836324752)),
-                  ),
 
-                  //Mapped markers in nav mode
-                  Visibility(
-                      visible: showMappingLayer.watch(context) && curPathFindingState != PathFindingState.idle,
-                      child: PolylineLayer(
-                        polylines: mappedPaths,
-                      )),
-                  Visibility(visible: showMappingLayer.watch(context) && curPathFindingState != PathFindingState.idle, child: MarkerLayer(markers: mappedMakers)),
-
-                  // Explored Paths
-                  Visibility(
-                    visible: showExploredPath.watch(context),
-                    child: PolylineLayer(polylines: [Polyline(points: exploredCoordinates, color: Colors.red, strokeWidth: 5)]),
-                  ),
-
-                  // Shortest Path
-                  PolylineLayer(polylines: [
-                    Polyline(points: headingPolyline, color: const Color.fromARGB(255, 0, 0, 0), strokeWidth: 5),
-                    Polyline(points: shortestCoordinates, color: Colors.blue, strokeWidth: 5)
-                  ]),
-
-                  // User location marker
-                  CurrentLocationLayer(
-                    alignPositionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
-                    alignDirectionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
-                    positionStream: Stream.value(LocationMarkerPosition(latitude: centerCoord!.latitude, longitude: centerCoord!.longitude, accuracy: snapshot.data!.accuracy)),
-                    headingStream: curPathFindingState == PathFindingState.finished && (kIsWeb || Platform.isWindows)
-                        ? Stream.value(LocationMarkerHeading(heading: manualHeadingValue, accuracy: 0.5))
-                        : const LocationMarkerDataStreamFactory().fromCompassHeadingStream(),
-                    style: const LocationMarkerStyle(
-                      markerDirection: MarkerDirection.heading,
-                    ),
-                  ),
-
-                  // Map Markers for intertest point
-                  Visibility(
-                      visible: destinationCoord != null,
-                      child: MarkerLayer(
-                          alignment: Alignment.center,
-                          rotate: true,
-                          markers: [if (destinationCoord != null) Marker(width: destName.length > 9 ? destName.length * 9 : 100, height: 80, point: destinationCoord!, child: LabelMarker(destName))])),
-
-                  //Mapped markers
-                  Visibility(
-                      visible: showMappingLayer.watch(context) && curPathFindingState == PathFindingState.idle,
-                      child: PolylineLayer(
-                        polylines: mappedPaths,
-                      )),
-                  Visibility(visible: showMappingLayer.watch(context) && curPathFindingState == PathFindingState.idle, child: MarkerLayer(markers: mappedMakers)),
-
-                  // Destination lookup textfield
-                  Padding(
-                    padding: EdgeInsets.only(
-                        top: kIsWeb
-                            ? 5
-                            : Platform.isAndroid
-                                ? 30
-                                : 5,
-                        bottom: 5,
-                        left: 5,
-                        right: 5),
-                    child: TypeAheadField<CoordPoint>(
-                      direction: VerticalDirection.down,
-                      controller: destLookupTextController,
-                      builder: (context, controller, focusNode) => TextField(
-                        controller: controller,
-                        focusNode: focusNode,
-                        autofocus: false,
-                        style: DefaultTextStyle.of(context).style.copyWith(fontStyle: FontStyle.italic),
-                        decoration: InputDecoration(
-                            filled: true,
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                            hintText: 'Enter destination',
-                            suffixIcon: IconButton(
-                                onPressed: () {
-                                  if (destLookupTextController.text.isEmpty) {
-                                    curPathFindingState = PathFindingState.idle;
-                                    focusNode.unfocus();
-                                    exploredCoordinates.clear();
-                                    shortestCoordinates.clear();
-                                    destLookupTextController.clear();
-                                    destinationCoord = null;
-                                    destName = '';
-                                    mapController.move(centerCoord!, mapDefaultZoomValue);
-                                    mapController.rotate(0);
-                                    manualHeadingValue = 0.0;
-                                    contUpdatePos = false;
-                                  } else {
-                                    destLookupTextController.clear();
-                                    curPathFindingState = PathFindingState.idle;
-                                    destinationCoord = null;
-                                    destName = '';
-                                  }
-                                  setState(() {});
-                                },
-                                icon: const Icon(Icons.clear))),
+                    return FlutterMap(
+                      mapController: mapController,
+                      options: MapOptions(
+                        initialCenter: centerCoord!,
+                        initialZoom: mapDefaultZoomValue,
+                        maxZoom: mapMaxZoomValue,
+                        cameraConstraint:
+                            CameraConstraint.containCenter(bounds: LatLngBounds(const LatLng(33.8892181509212, -117.89024039406391), const LatLng(33.87568283383185, -117.87979836324752))),
+                        onMapReady: () {
+                          mapDoneLoading = true;
+                          setState(() {});
+                        },
+                        onPositionChanged: (camera, hasGesture) async {
+                          // Onroute tracking
+                          if (curPathFindingState == PathFindingState.finished) {
+                            if (!onRoute) {
+                              contUpdatePos = false;
+                              exploredCoordinates.clear();
+                              shortestCoordinates.clear();
+                              curPathFindingState = PathFindingState.finding;
+                              await traceRoute(centerCoord!, destinationCoord!);
+                              onRoute = onRouteCheck(shortestCoordinates);
+                              curPathFindingState = PathFindingState.finished;
+                              setState(() {});
+                            }
+                          }
+                        },
+                        onTap: (tapPosition, point) {
+                          if (showMappingLayer.value) {
+                            mappedMakers.add(mappingMaker(point, false, false, false, false));
+                            // Get neighbors
+                            mappedCoords.add(CoordPoint(
+                                point,
+                                mappedCoords
+                                    .where((e) => Geolocator.distanceBetween(point.latitude, point.longitude, e.coord.latitude, e.coord.longitude) <= maxNeighborDistance)
+                                    .map((e) => e.coord)
+                                    .toList()));
+                            for (var coord in mappedCoords.last.neighborCoords) {
+                              CoordPoint neighbor = mappedCoords.firstWhere((e) => e.coord.latitude == coord.latitude && e.coord.longitude == coord.longitude);
+                              if (neighbor.neighborCoords.indexWhere((e) => e.latitude == point.latitude && e.longitude == point.longitude) == -1) {
+                                neighbor.neighborCoords.add(point);
+                              }
+                            }
+                            mappedPaths.addAll(mappedCoords.last.neighborCoords.map((e) => Polyline(points: [mappedCoords.last.coord, e], strokeWidth: 5, color: Colors.purple)));
+                            //Save
+                            mappedCoordSave();
+                            setState(() {});
+                          }
+                        },
                       ),
-                      decorationBuilder: (context, child) => Material(
-                        type: MaterialType.card,
-                        elevation: 4,
-                        borderRadius: BorderRadius.circular(10),
-                        child: child,
-                      ),
-                      itemBuilder: (context, point) => ListTile(
-                        title: Text(point.locName),
-                      ),
-                      hideOnEmpty: true,
-                      hideOnSelect: true,
-                      hideOnUnfocus: true,
-                      hideWithKeyboard: true,
-                      retainOnLoading: true,
-                      onSelected: (point) {
-                        destLookupTextController.text = point.locName;
-                        destinationCoord = point.coord;
-                        destName = point.locName;
-                        FocusScope.of(context).unfocus();
-                        mapController.rotate(0);
-                        mapController.move(point.coord, mapDefaultZoomValue);
-                        curPathFindingState = PathFindingState.ready;
-                      },
-                      suggestionsCallback: (String search) {
-                        return suggestionsCallback(search);
-                      },
-                      loadingBuilder: (context) => const Text('Loading...'),
-                      errorBuilder: (context, error) => const Text('Error!'),
-                      emptyBuilder: (context) => const Text('No rooms found!'),
-                      // itemSeparatorBuilder: itemSeparatorBuilder,
-                      // listBuilder: settings.gridLayout.value ? gridLayoutBuilder : null,
-                    ),
-                  ),
+                      children: [
+                        TileLayer(
+                          // Display map tiles from osm
+                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', // OSMF's Tile Server
+                          userAgentPackageName: 'com.campusnav.app',
+                          tileBounds: LatLngBounds(const LatLng(33.8892181509212, -117.89024039406391), const LatLng(33.87568283383185, -117.87979836324752)),
+                        ),
 
-                  // Map credit
-                  RichAttributionWidget(
-                    alignment: AttributionAlignment.bottomLeft,
-                    attributions: [
-                      TextSourceAttribution(
-                        'OpenStreetMap contributors',
-                        onTap: () => launchUrl(Uri.parse('https://openstreetmap.org/copyright')), // (external)
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            }
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
-        });
+                        //Mapped markers in nav mode
+                        Visibility(
+                            visible: showMappingLayer.watch(context) && curPathFindingState != PathFindingState.idle,
+                            child: PolylineLayer(
+                              polylines: mappedPaths,
+                            )),
+                        Visibility(visible: showMappingLayer.watch(context) && curPathFindingState != PathFindingState.idle, child: MarkerLayer(markers: mappedMakers)),
+
+                        // Explored Paths
+                        Visibility(
+                          visible: showExploredPath.watch(context),
+                          child: PolylineLayer(polylines: [Polyline(points: exploredCoordinates, color: Colors.red, strokeWidth: 5)]),
+                        ),
+
+                        // Shortest Path
+                        PolylineLayer(polylines: [
+                          Polyline(points: headingPolyline, color: const Color.fromARGB(255, 0, 0, 0), strokeWidth: 5),
+                          Polyline(points: shortestCoordinates, color: Colors.blue, strokeWidth: 5)
+                        ]),
+
+                        // User location marker
+                        CurrentLocationLayer(
+                          alignPositionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
+                          alignDirectionOnUpdate: !contUpdatePos ? AlignOnUpdate.once : AlignOnUpdate.always,
+                          positionStream: Stream.value(LocationMarkerPosition(latitude: centerCoord!.latitude, longitude: centerCoord!.longitude, accuracy: snapshot.data!.accuracy)),
+                          headingStream: (kIsWeb || Platform.isWindows)
+                              ? Stream.value(LocationMarkerHeading(heading: manualHeadingValue, accuracy: headingAccuracy.watch(context)))
+                              : const LocationMarkerDataStreamFactory().fromCompassHeadingStream(),
+                          style: const LocationMarkerStyle(
+                            markerDirection: MarkerDirection.heading,
+                          ),
+                        ),
+
+                        // Map Markers for intertest point
+                        Visibility(
+                            visible: destinationCoord != null,
+                            child: MarkerLayer(alignment: Alignment.center, rotate: true, markers: [
+                              if (destinationCoord != null) Marker(width: destName.length > 9 ? destName.length * 9 : 100, height: 80, point: destinationCoord!, child: LabelMarker(destName))
+                            ])),
+
+                        //Mapped markers
+                        Visibility(
+                            visible: showMappingLayer.watch(context) && curPathFindingState == PathFindingState.idle,
+                            child: PolylineLayer(
+                              polylines: mappedPaths,
+                            )),
+                        Visibility(visible: showMappingLayer.watch(context) && curPathFindingState == PathFindingState.idle, child: MarkerLayer(markers: mappedMakers)),
+
+                        // Destination lookup textfield
+                        Padding(
+                          padding: EdgeInsets.only(
+                              top: kIsWeb
+                                  ? 5
+                                  : Platform.isAndroid
+                                      ? 30
+                                      : 5,
+                              bottom: 5,
+                              left: 5,
+                              right: 5),
+                          child: TypeAheadField<CoordPoint>(
+                            direction: VerticalDirection.down,
+                            controller: destLookupTextController,
+                            builder: (context, controller, focusNode) => TextField(
+                              controller: controller,
+                              focusNode: focusNode,
+                              autofocus: false,
+                              style: DefaultTextStyle.of(context).style.copyWith(fontStyle: FontStyle.italic),
+                              decoration: InputDecoration(
+                                  filled: true,
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                  hintText: 'Enter destination',
+                                  suffixIcon: IconButton(
+                                      onPressed: () {
+                                        if (destLookupTextController.text.isEmpty) {
+                                          curPathFindingState = PathFindingState.idle;
+                                          focusNode.unfocus();
+                                          exploredCoordinates.clear();
+                                          shortestCoordinates.clear();
+                                          destLookupTextController.clear();
+                                          destinationCoord = null;
+                                          destName = '';
+                                          mapController.move(centerCoord!, mapDefaultZoomValue);
+                                          mapController.rotate(0);
+                                          manualHeadingValue = 0.0;
+                                          contUpdatePos = false;
+                                        } else {
+                                          destLookupTextController.clear();
+                                          curPathFindingState = PathFindingState.idle;
+                                          destinationCoord = null;
+                                          destName = '';
+                                        }
+                                        setState(() {});
+                                      },
+                                      icon: const Icon(Icons.clear))),
+                            ),
+                            decorationBuilder: (context, child) => Material(
+                              type: MaterialType.card,
+                              elevation: 4,
+                              borderRadius: BorderRadius.circular(10),
+                              child: child,
+                            ),
+                            itemBuilder: (context, point) => ListTile(
+                              title: Text(point.locName),
+                            ),
+                            hideOnEmpty: true,
+                            hideOnSelect: true,
+                            hideOnUnfocus: true,
+                            hideWithKeyboard: true,
+                            retainOnLoading: true,
+                            onSelected: (point) {
+                              destLookupTextController.text = point.locName;
+                              destinationCoord = point.coord;
+                              destName = point.locName;
+                              FocusScope.of(context).unfocus();
+                              mapController.rotate(0);
+                              mapController.move(point.coord, mapDefaultZoomValue);
+                              curPathFindingState = PathFindingState.ready;
+                              setState(() {});
+                            },
+                            suggestionsCallback: (String search) {
+                              return suggestionsCallback(search);
+                            },
+                            loadingBuilder: (context) => const Text('Loading...'),
+                            errorBuilder: (context, error) => const Text('Error!'),
+                            emptyBuilder: (context) => const Text('No rooms found!'),
+                            // itemSeparatorBuilder: itemSeparatorBuilder,
+                            // listBuilder: settings.gridLayout.value ? gridLayoutBuilder : null,
+                          ),
+                        ),
+
+                        // Map credit
+                        RichAttributionWidget(
+                          alignment: AttributionAlignment.bottomLeft,
+                          attributions: [
+                            TextSourceAttribution(
+                              'OpenStreetMap contributors',
+                              onTap: () => launchUrl(Uri.parse('https://openstreetmap.org/copyright')), // (external)
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  }
+                } else {
+                  requestLocationPerm();
+                  return const Center(child: CircularProgressIndicator());
+                }
+              });
+        } else {
+          return const CircularProgressIndicator();
+        }
+      },
+    );
   }
 
   // Load mapped coords
@@ -458,6 +489,7 @@ class _MyHomePageState extends State<MyHomePage> {
     await Future.delayed(const Duration(milliseconds: 100));
     mapController.move(centerCoord!, 19);
     manualHeadingValue = navMapRotation(shortestCoordinates);
+    headingAccuracy.value = 0.5;
   }
 
   // Floating button
@@ -524,6 +556,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: FloatingActionButton.small(
                         onPressed: () {
                           mapController.move(centerCoord!, 19);
+                          setState(() {});
                         },
                         child: const Icon(Icons.gps_fixed_outlined)))),
             Visibility(
@@ -554,16 +587,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       mapController.move(centerCoord!, mapDefaultZoomValue);
                       manualHeadingValue = 0.0;
                     } else if (curPathFindingState == PathFindingState.finding || curPathFindingState == PathFindingState.finished) {
-                      curPathFindingState = PathFindingState.idle;
-                      exploredCoordinates.clear();
-                      shortestCoordinates.clear();
-                      destLookupTextController.clear();
-                      destinationCoord = null;
-                      destName = '';
-                      mapController.move(centerCoord!, mapDefaultZoomValue);
-                      mapController.rotate(0);
-                      manualHeadingValue = 0.0;
-                      contUpdatePos = false;
+                      routingFinish();
                     } else {
                       exploredCoordinates.clear();
                       shortestCoordinates.clear();
