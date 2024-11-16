@@ -362,7 +362,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 }
               });
         } else {
-          return const CircularProgressIndicator();
+          requestLocationPerm();
+          return const Center(child: CircularProgressIndicator());
         }
       },
     );
