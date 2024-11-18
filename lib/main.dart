@@ -68,6 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
+    permission = checkLocationPerm();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Load mapped markers
       mappedMakers = kIsWeb
@@ -77,7 +78,6 @@ class _MyHomePageState extends State<MyHomePage> {
               : await loadMappedMarkers(mappedCoordsJsonPath);
     });
     super.initState();
-    permission = checkLocationPerm();
   }
 
   Future<bool> checkLocationPerm() async {
@@ -123,7 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return FutureBuilder(
       future: permission,
       builder: (context, permSnapshot) {
-        if (permSnapshot.connectionState == ConnectionState.done) {
+        if (permSnapshot.hasData && !permSnapshot.hasError) {
           bool? result = permSnapshot.data;
           if (result!) {
             return StreamBuilder(
