@@ -144,16 +144,14 @@ class _MyHomePageState extends State<MyHomePage> {
                       if (curPathFindingState == PathFindingState.finished) {
                         // Update heading data
                         manualHeadingValue = navMapRotation(shortestCoordinates);
-
+                        // Routing events
                         if (Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.latitude, shortestCoordinates.last.latitude, shortestCoordinates.last.longitude) <= 5) {
                           arrivedAtDest = true;
                           routingFinish();
                         } else {
                           arrivedAtDest = false;
                         }
-
                         updateRoute(shortestCoordinates);
-
                         // Estimate time recalc
                         estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, defaultWalkingSpeedMPH).pretty(abbreviated: true);
                       }
