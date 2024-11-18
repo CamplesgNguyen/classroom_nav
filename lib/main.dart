@@ -64,6 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Stream<Position> positionStream = Geolocator.getPositionStream(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 1));
   bool onRoute = true;
   Signal headingAccuracy = Signal<double>(0.0);
+  late Future permission;
 
   @override
   void initState() {
@@ -76,6 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
               : await loadMappedMarkers(mappedCoordsJsonPath);
     });
     super.initState();
+    permission = checkLocationPerm();
   }
 
   Future<bool> checkLocationPerm() async {
@@ -119,9 +121,9 @@ class _MyHomePageState extends State<MyHomePage> {
   // Map
   Widget mapView() {
     return FutureBuilder(
-      future: checkLocationPerm(),
+      future: permission,
       builder: (context, permSnapshot) {
-        if (permSnapshot.hasData) {
+        if (permSnapshot.connectionState == ConnectionState.done) {
           bool? result = permSnapshot.data;
           if (result!) {
             return StreamBuilder(
