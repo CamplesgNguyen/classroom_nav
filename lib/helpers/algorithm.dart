@@ -118,11 +118,11 @@ void updateRoute(List<LatLng> coords) {
     int closestCoordIndex = getShortestCoordIndex(coords);
     if (closestCoordIndex != -1) {
       coords.removeWhere(
-          (e) => routingCoordCount > coords.length && FlutterMapMath().distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude, "meters") <= maxNeighborDistance);
-      if (Geolocator.bearingBetween(centerCoord!.latitude, centerCoord!.longitude, coords.first.latitude, coords.first.longitude) < -90 ||
-          Geolocator.bearingBetween(centerCoord!.latitude, centerCoord!.longitude, coords.first.latitude, coords.first.longitude) > 90) {
-        coords.removeAt(0);
-      }
+          (e) => routingCoordCount > coords.length && (FlutterMapMath().distanceBetween(e.latitude, e.longitude, coords.last.latitude, coords.last.longitude, "meters")) > FlutterMapMath().distanceBetween(centerCoord!.latitude, centerCoord!.longitude, coords.last.latitude, coords.last.longitude, "meters"));
+      // if (Geolocator.bearingBetween(centerCoord!.latitude, centerCoord!.longitude, coords.last.latitude, coords.last.longitude) < -90 ||
+      //     Geolocator.bearingBetween(centerCoord!.latitude, centerCoord!.longitude, coords.last.latitude, coords.last.longitude) > 90) {
+      //   coords.removeAt(0);
+      // }
     }
     coords.removeAt(0);
     coords.insert(0, LatLng(centerCoord!.latitude, centerCoord!.longitude));
