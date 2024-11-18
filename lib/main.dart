@@ -125,7 +125,7 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (context, permSnapshot) {
         if (permSnapshot.hasData && !permSnapshot.hasError) {
           bool? result = permSnapshot.data;
-          if (result!) {
+          if (kIsWeb || result!) {
             return StreamBuilder(
                 stream: positionStream, // Get current lat & longtitude
                 builder: (ctx, snapshot) {
