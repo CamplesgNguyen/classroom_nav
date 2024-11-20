@@ -142,3 +142,53 @@ void updateRoute(List<LatLng> coords) {
     routingCoordCount = coords.length;
   }
 }
+
+// A* Algorithm
+List<LatLng> reRoute(LatLng startCoord, LatLng destCoord) {
+  List<CoordPoint> exploredPoints = [];
+  List<CoordPoint> frontier = [CoordPoint(startCoord, getNearbyPoints(startCoord).map((e) => e.coord).toList())];
+
+  while (exploredPoints.isEmpty || (exploredPoints.last.coord.latitude != destCoord.latitude && exploredPoints.last.coord.longitude != destCoord.longitude)) {
+    exploredPoints.add(frontier.removeAt(0));
+    List<CoordPoint> neighborPoints = mappedCoords
+        .where((e) => exploredPoints.last.neighborCoords.map((n) => [n.latitude, n.longitude]).where((m) => m.first == e.coord.latitude && m.last == e.coord.longitude).isNotEmpty)
+        .toList();
+    for (var point in neighborPoints) {
+      // Calc path values
+      point.gVal = Geolocator.distanceBetween(point.coord.latitude, point.coord.longitude, exploredPoints.last.coord.latitude, exploredPoints.last.coord.longitude);
+      point.hVal = Geolocator.distanceBetween(point.coord.latitude, point.coord.longitude, destCoord.latitude, destCoord.longitude);
+      point.fVal = point.gVal + point.hVal;
+
+      // Store points
+      int indexOfSamePointInFrontier = frontier.indexWhere((e) => e.coord.latitude == point.coord.latitude && e.coord.longitude == point.coord.longitude);
+      if (indexOfSamePointInFrontier == -1 && exploredPoints.indexWhere((e) => e.coord.latitude == point.coord.latitude && e.coord.longitude == point.coord.longitude) == -1) {
+        frontier.add(point);
+      } else if (indexOfSamePointInFrontier != -1 && frontier[indexOfSamePointInFrontier].fVal > point.fVal) {
+        frontier.removeAt(indexOfSamePointInFrontier);
+        frontier.insert(indexOfSamePointInFrontier, point);
+      }
+    }
+    frontier.sort((a, b) => a.fVal.compareTo(b.fVal));
+  }
+
+  // Back track to get shortest path
+  List<CoordPoint> backTrack = [];
+  while (exploredPoints.isNotEmpty) {
+    if (backTrack.isEmpty) {
+      backTrack.add(exploredPoints.removeLast());
+    } else if (backTrack.last.neighborCoords.indexWhere((e) => e.latitude == exploredPoints.last.coord.latitude && e.longitude == exploredPoints.last.coord.longitude) != -1 ||
+        exploredPoints.length == 1) {
+      backTrack.add(exploredPoints.removeLast());
+    } else {
+      exploredPoints.removeLast();
+    }
+  }
+
+  // Reverse push to draw shortest path
+  List<LatLng> shortestPath = [];
+  while (backTrack.isNotEmpty) {
+    shortestPath.add(backTrack.removeLast().coord);
+  }
+
+  return shortestPath;
+}
