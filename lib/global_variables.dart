@@ -35,4 +35,4 @@ double manualHeadingValue = 0.0;
 List<LatLng> headingPolyline = [];
 List<double> walkSpeeds = [];
 int routingCoordCount = 0;
-bool arrivedAtDest = false;
+Signal arrivedAtDest = Signal<bool>(false);

@@ -146,12 +146,14 @@ class _MyHomePageState extends State<MyHomePage> {
                         manualHeadingValue = navMapRotation(shortestCoordinates);
                         // Routing events
                         if (Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.latitude, shortestCoordinates.last.latitude, shortestCoordinates.last.longitude) <= 5) {
-                          arrivedAtDest = true;
+                          arrivedAtDest.value = true;
                           routingFinish();
                         } else {
-                          arrivedAtDest = false;
+                          arrivedAtDest.value = false;
                         }
-                        updateRoute(shortestCoordinates);
+                        // updateRoute(shortestCoordinates);
+                        shortestCoordinates = reRoute(LatLng(centerCoord!.latitude, centerCoord!.longitude), destinationCoord!);
+                        
                         // Estimate time recalc
                         estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, defaultWalkingSpeedMPH).pretty(abbreviated: true);
                       }
@@ -168,22 +170,22 @@ class _MyHomePageState extends State<MyHomePage> {
                             mapDoneLoading = true;
                             setState(() {});
                           },
-                          onPositionChanged: (camera, hasGesture) async {
-                            // Onroute tracking
-                            if (curPathFindingState == PathFindingState.finished) {
-                              onRoute = onRouteCheck(shortestCoordinates);
-                              if (!onRoute) {
-                                contUpdatePos = false;
-                                exploredCoordinates.clear();
-                                shortestCoordinates.clear();
-                                curPathFindingState = PathFindingState.finding;
-                                await traceRoute(centerCoord!, destinationCoord!);
-                                onRoute = onRouteCheck(shortestCoordinates);
-                                curPathFindingState = PathFindingState.finished;
-                                setState(() {});
-                              }
-                            }
-                          },
+                          // onPositionChanged: (camera, hasGesture) async {
+                          //   // Onroute tracking
+                          //   if (curPathFindingState == PathFindingState.finished) {
+                          //     onRoute = onRouteCheck(shortestCoordinates);
+                          //     if (!onRoute) {
+                          //       contUpdatePos = false;
+                          //       exploredCoordinates.clear();
+                          //       shortestCoordinates.clear();
+                          //       curPathFindingState = PathFindingState.finding;
+                          //       await traceRoute(centerCoord!, destinationCoord!);
+                          //       onRoute = onRouteCheck(shortestCoordinates);
+                          //       curPathFindingState = PathFindingState.finished;
+                          //       setState(() {});
+                          //     }
+                          //   }
+                          // },
                           onTap: (tapPosition, point) {
                             if (showMappingLayer.value) {
                               mappedMakers.add(mappingMaker(point, false, false, false, false));
@@ -518,7 +520,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: SizedBox(
                       height: 25,
                       child: Text(
-                        arrivedAtDest ? 'Arrived!' : 'Estimate: ${estimateNavTime.watch(context)}',
+                        arrivedAtDest.watch(context) ? 'Arrived!' : 'Estimate: ${estimateNavTime.watch(context)}',
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                       )),
