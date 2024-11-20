@@ -5,11 +5,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:classroom_nav/global_variables.dart';
-import 'package:classroom_nav/helpers/algorithm.dart';
+import 'package:classroom_nav/helpers/helper_funcs.dart';
 import 'package:classroom_nav/helpers/classes.dart';
 import 'package:classroom_nav/helpers/custom_marker.dart';
 import 'package:classroom_nav/helpers/enums.dart';
-import 'package:classroom_nav/helpers/json_save.dart';
+import 'package:classroom_nav/helpers/json_helpers.dart';
 import 'package:classroom_nav/helpers/popups.dart';
 import 'package:duration/duration.dart';
 import 'package:flutter/foundation.dart';
