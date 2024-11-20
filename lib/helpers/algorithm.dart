@@ -1,6 +1,5 @@
 import 'package:classroom_nav/global_variables.dart';
 import 'package:classroom_nav/helpers/classes.dart';
-import 'package:flutter_map_math/flutter_geo_math.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:units_converter/units_converter.dart';
@@ -37,7 +36,8 @@ List<LatLng> getCoordsInRange(List<LatLng> coords) {
 }
 
 bool onRouteCheck(List<LatLng> coords) {
-  if (routingCoordCount > coords.length && coords.where((e) => coords.indexOf(e) != 0 && Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) < maxNeighborDistance).length > 1) {
+  if (routingCoordCount > coords.length &&
+      coords.where((e) => e != coords.first && Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) < maxNeighborDistance).length > 1) {
     return false;
   }
   return true;
@@ -115,15 +115,28 @@ double navMapRotation(List<LatLng> coords) {
 void updateRoute(List<LatLng> coords) {
   bool onRoute = onRouteCheck(coords);
   if (onRoute && coords.length > 1) {
-    int closestCoordIndex = getShortestCoordIndex(coords);
-    if (closestCoordIndex != -1) {
-      coords.removeWhere(
-          (e) => routingCoordCount > coords.length && (FlutterMapMath().distanceBetween(e.latitude, e.longitude, coords.last.latitude, coords.last.longitude, "meters")) > FlutterMapMath().distanceBetween(centerCoord!.latitude, centerCoord!.longitude, coords.last.latitude, coords.last.longitude, "meters"));
-      // if (Geolocator.bearingBetween(centerCoord!.latitude, centerCoord!.longitude, coords.last.latitude, coords.last.longitude) < -90 ||
-      //     Geolocator.bearingBetween(centerCoord!.latitude, centerCoord!.longitude, coords.last.latitude, coords.last.longitude) > 90) {
-      //   coords.removeAt(0);
-      // }
+    int closestIndex = getShortestCoordIndex(coords);
+
+    LatLng prevCoord = coords.last;
+    double distance = 0;
+    double distanceWithCurPoint = 0;
+    for (var coord in coords.reversed) {
+      if (coords.indexOf(coord) > closestIndex) break;
+      if (coords.indexOf(coord) >= closestIndex + 1 || coord != coords.last) {
+        distanceWithCurPoint += Geolocator.distanceBetween(prevCoord.latitude, prevCoord.longitude, coord.latitude, coord.longitude);
+      }
+      if (coords.indexOf(coord) >= closestIndex || coord != coords.last) {
+        distance += Geolocator.distanceBetween(prevCoord.latitude, prevCoord.longitude, coord.latitude, coord.longitude);
+      }
+      prevCoord = coord;
     }
+
+    if (distance > distanceWithCurPoint) {
+      coords.removeRange(0, closestIndex);
+    } else {
+      coords.removeRange(0, closestIndex + 1);
+    }
+
     coords.removeAt(0);
     coords.insert(0, LatLng(centerCoord!.latitude, centerCoord!.longitude));
     routingCoordCount = coords.length;

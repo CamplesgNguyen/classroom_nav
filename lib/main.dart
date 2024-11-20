@@ -171,6 +171,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           onPositionChanged: (camera, hasGesture) async {
                             // Onroute tracking
                             if (curPathFindingState == PathFindingState.finished) {
+                              onRoute = onRouteCheck(shortestCoordinates);
                               if (!onRoute) {
                                 contUpdatePos = false;
                                 exploredCoordinates.clear();
