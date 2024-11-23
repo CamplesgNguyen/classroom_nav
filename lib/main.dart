@@ -145,15 +145,22 @@ class _MyHomePageState extends State<MyHomePage> {
                         // Update heading data
                         manualHeadingValue = navMapRotation(shortestCoordinates);
                         // Routing events
-                        if (Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.latitude, shortestCoordinates.last.latitude, shortestCoordinates.last.longitude) <= 5) {
+                        if (Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.latitude, shortestCoordinates.last.latitude, shortestCoordinates.last.longitude) <= 50) {
                           arrivedAtDest.value = true;
                           routingFinish();
                         } else {
                           arrivedAtDest.value = false;
                         }
-                        // updateRoute(shortestCoordinates);
-                        shortestCoordinates = reRoute(LatLng(centerCoord!.latitude, centerCoord!.longitude), destinationCoord!);
+
+                        if (shortestCoordinates.isNotEmpty) {
+                          int halfWayIndex = (shortestCoordinates.length ~/ 2) + 1;
+                          LatLng halfWayCoord = shortestCoordinates[halfWayIndex];
+                          shortestCoordinates.removeRange(0, halfWayIndex);
+                          shortestCoordinates.insertAll(0, reRoute(LatLng(centerCoord!.latitude, centerCoord!.longitude), halfWayCoord));
+                        }
+
                         
+
                         // Estimate time recalc
                         estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, defaultWalkingSpeedMPH).pretty(abbreviated: true);
                       }
