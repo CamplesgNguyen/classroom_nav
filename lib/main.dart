@@ -146,11 +146,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         // Update heading data
                         manualHeadingValue = navMapRotation(shortestCoordinates);
                         // Routing events
-                        if (shortestCoordinates.isNotEmpty && distanceToDest(centerCoord!, shortestCoordinates) < 5) {
+                        if (shortestCoordinates.isNotEmpty && distanceToDest(centerCoord!, shortestCoordinates) < 15) {
                           arrivedAtDest.value = true;
                           routingFinish();
-                        } else {
-                          arrivedAtDest.value = false;
                         }
 
                         if (shortestCoordinates.isNotEmpty) {
@@ -308,6 +306,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                             mapController.rotate(0);
                                             manualHeadingValue = 0.0;
                                             contUpdatePos = false;
+                                            arrivedAtDest.value = false;
                                           } else {
                                             destLookupTextController.clear();
                                             curPathFindingState = PathFindingState.idle;
@@ -333,6 +332,19 @@ class _MyHomePageState extends State<MyHomePage> {
                               hideWithKeyboard: true,
                               retainOnLoading: true,
                               onSelected: (point) {
+                                //reset
+                                curPathFindingState = PathFindingState.idle;
+                                exploredCoordinates.clear();
+                                shortestCoordinates.clear();
+                                destLookupTextController.clear();
+                                destinationCoord = null;
+                                destName = '';
+                                mapController.move(centerCoord!, mapDefaultZoomValue);
+                                mapController.rotate(0);
+                                manualHeadingValue = 0.0;
+                                contUpdatePos = false;
+                                arrivedAtDest.value = false;
+                                //new route
                                 destLookupTextController.text = point.locName;
                                 destinationCoord = point.coord;
                                 destName = point.locName;
@@ -450,7 +462,9 @@ class _MyHomePageState extends State<MyHomePage> {
     while (exploredPoints.isEmpty || (exploredPoints.last.coord.latitude != destCoord.latitude && exploredPoints.last.coord.longitude != destCoord.longitude)) {
       var removedFrontierPoint = frontier.removeAt(0);
       if (exploredCoordinates.isNotEmpty && !removedFrontierPoint.neighborCoords.contains(exploredCoordinates.last.last)) {
-          exploredCoordinates.add([exploredPoints.firstWhere((e) => e.neighborCoords.indexWhere((t) => t.latitude == removedFrontierPoint.coord.latitude && t.longitude == removedFrontierPoint.coord.longitude) != -1).coord]);
+        exploredCoordinates.add([
+          exploredPoints.firstWhere((e) => e.neighborCoords.indexWhere((t) => t.latitude == removedFrontierPoint.coord.latitude && t.longitude == removedFrontierPoint.coord.longitude) != -1).coord
+        ]);
       }
       exploredPoints.add(removedFrontierPoint);
       if (exploredCoordinates.isEmpty) exploredCoordinates.add([]);
@@ -626,6 +640,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       curPathFindingState = PathFindingState.finding;
                       setState(() {});
                       await traceRoute(centerCoord!, destinationCoord!);
+                      arrivedAtDest.value = false;
                       curPathFindingState = PathFindingState.finished;
                       contUpdatePos = true;
                     }
