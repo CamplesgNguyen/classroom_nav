@@ -21,16 +21,6 @@ List<CoordPoint> getNearbyPoints(LatLng curCoord) {
   return neighborCoords;
 }
 
-double calcAvgSpeed(List<double> speeds) {
-  double total = 0;
-  for (var value in speeds) {
-    total += value;
-  }
-  total = total / speeds.length;
-
-  return total.convertFromTo(LENGTH.meters, LENGTH.miles)! * 2.236936;
-}
-
 List<LatLng> getCoordsInRange(List<LatLng> coords) {
   return coords.where((e) => routingCoordCount > coords.length && Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, e.latitude, e.longitude) < maxNeighborDistance).toList();
 }
@@ -71,26 +61,21 @@ Duration totalNavTimeCalc(List<LatLng> coords, double avgSpeed) {
   return const Duration(seconds: 0);
 }
 
-int getShortestCoordIndex(List<LatLng> coords) {
-  int index = -1;
+double distanceToDest(LatLng curCoord, List<LatLng> coords) {
   if (coords.isNotEmpty) {
-    LatLng closestCoord = coords.first;
-    double closestDistance = -1;
+    LatLng prevCoord = coords.first;
+    double distance = 0;
     for (var coord in coords) {
-      if (coord == coords.first) continue;
-      double newDistance = Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.longitude, coord.latitude, coord.longitude);
-      if (closestDistance == -1 || newDistance < closestDistance) {
-        closestDistance = newDistance;
-        closestCoord = coord;
-      }
+      distance += Geolocator.distanceBetween(prevCoord.latitude, prevCoord.longitude, coord.latitude, coord.longitude);
+      prevCoord = coord;
     }
-    if (closestDistance < 5) {
-      index = coords.indexOf(closestCoord);
-    }
+    return distance;
+  } else {
+    return 0;
   }
-
-  return index;
 }
+
+
 
 double navMapRotation(List<LatLng> coords) {
   if (coords.isNotEmpty) {
@@ -112,38 +97,7 @@ double navMapRotation(List<LatLng> coords) {
   return prevRotationValue;
 }
 
-void updateRoute(List<LatLng> coords) {
-  bool onRoute = onRouteCheck(coords);
-  if (onRoute && coords.length > 1) {
-    int closestIndex = getShortestCoordIndex(coords);
-
-    LatLng prevCoord = coords.last;
-    double distance = 0;
-    double distanceWithCurPoint = 0;
-    for (var coord in coords.reversed) {
-      if (coords.indexOf(coord) > closestIndex) break;
-      if (coords.indexOf(coord) >= closestIndex + 1 || coord != coords.last) {
-        distanceWithCurPoint += Geolocator.distanceBetween(prevCoord.latitude, prevCoord.longitude, coord.latitude, coord.longitude);
-      }
-      if (coords.indexOf(coord) >= closestIndex || coord != coords.last) {
-        distance += Geolocator.distanceBetween(prevCoord.latitude, prevCoord.longitude, coord.latitude, coord.longitude);
-      }
-      prevCoord = coord;
-    }
-
-    if (distance > distanceWithCurPoint) {
-      coords.removeRange(0, closestIndex);
-    } else {
-      coords.removeRange(0, closestIndex + 1);
-    }
-
-    coords.removeAt(0);
-    coords.insert(0, LatLng(centerCoord!.latitude, centerCoord!.longitude));
-    routingCoordCount = coords.length;
-  }
-}
-
-// A* Algorithm
+// A* Algorithm for rerouting
 List<LatLng> reRoute(LatLng startCoord, LatLng destCoord) {
   List<CoordPoint> exploredPoints = [];
   List<CoordPoint> frontier = [CoordPoint(startCoord, getNearbyPoints(startCoord).map((e) => e.coord).toList())];

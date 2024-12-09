@@ -3,13 +3,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:classroom_nav/global_variables.dart';
-import 'package:classroom_nav/helpers/algorithm.dart';
+import 'package:classroom_nav/helpers/helper_funcs.dart';
 import 'package:classroom_nav/helpers/classes.dart';
 import 'package:classroom_nav/helpers/custom_marker.dart';
 import 'package:classroom_nav/helpers/enums.dart';
-import 'package:classroom_nav/helpers/json_save.dart';
+import 'package:classroom_nav/helpers/json_helpers.dart';
 import 'package:classroom_nav/helpers/popups.dart';
 import 'package:duration/duration.dart';
 import 'package:flutter/foundation.dart';
@@ -17,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
+import 'package:flutter_map_math/flutter_geo_math.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
@@ -57,7 +59,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<LatLng> exploredCoordinates = [];
+  List<List<LatLng>> exploredCoordinates = [];
   List<LatLng> shortestCoordinates = [];
   TextEditingController destLookupTextController = TextEditingController();
   LocationMarkerHeading? userMarkerHeadingData;
@@ -93,18 +95,17 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void routingFinish() {
-    curPathFindingState = PathFindingState.idle;
+    // curPathFindingState = PathFindingState.idle;
     exploredCoordinates.clear();
     shortestCoordinates.clear();
-    destLookupTextController.clear();
-    destinationCoord = null;
-    destName = '';
+    // destLookupTextController.clear();
+    // destinationCoord = null;
+    // destName = '';
     mapController.move(centerCoord!, mapDefaultZoomValue);
     mapController.rotate(0);
     manualHeadingValue = 0.0;
     headingAccuracy.value = 0.0;
     contUpdatePos = false;
-    setState(() {});
   }
 
   @override
@@ -145,15 +146,18 @@ class _MyHomePageState extends State<MyHomePage> {
                         // Update heading data
                         manualHeadingValue = navMapRotation(shortestCoordinates);
                         // Routing events
-                        if (Geolocator.distanceBetween(centerCoord!.latitude, centerCoord!.latitude, shortestCoordinates.last.latitude, shortestCoordinates.last.longitude) <= 5) {
+                        if (shortestCoordinates.isNotEmpty && distanceToDest(centerCoord!, shortestCoordinates) < 15) {
                           arrivedAtDest.value = true;
                           routingFinish();
-                        } else {
-                          arrivedAtDest.value = false;
                         }
-                        // updateRoute(shortestCoordinates);
-                        shortestCoordinates = reRoute(LatLng(centerCoord!.latitude, centerCoord!.longitude), destinationCoord!);
-                        
+
+                        if (shortestCoordinates.isNotEmpty) {
+                          int halfWayIndex = (shortestCoordinates.length ~/ 2) + 1;
+                          LatLng halfWayCoord = shortestCoordinates[halfWayIndex];
+                          shortestCoordinates.removeRange(0, halfWayIndex);
+                          shortestCoordinates.insertAll(0, reRoute(LatLng(centerCoord!.latitude, centerCoord!.longitude), halfWayCoord));
+                        }
+
                         // Estimate time recalc
                         estimateNavTime.value = totalNavTimeCalc(shortestCoordinates, defaultWalkingSpeedMPH).pretty(abbreviated: true);
                       }
@@ -228,7 +232,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           // Explored Paths
                           Visibility(
                             visible: showExploredPath.watch(context),
-                            child: PolylineLayer(polylines: [Polyline(points: exploredCoordinates, color: Colors.red, strokeWidth: 5)]),
+                            child: PolylineLayer(polylines: exploredCoordinates.map((e) => Polyline(points: e, color: Colors.red, strokeWidth: 5)).toList()),
                           ),
 
                           // Shortest Path
@@ -302,6 +306,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                             mapController.rotate(0);
                                             manualHeadingValue = 0.0;
                                             contUpdatePos = false;
+                                            arrivedAtDest.value = false;
                                           } else {
                                             destLookupTextController.clear();
                                             curPathFindingState = PathFindingState.idle;
@@ -327,6 +332,19 @@ class _MyHomePageState extends State<MyHomePage> {
                               hideWithKeyboard: true,
                               retainOnLoading: true,
                               onSelected: (point) {
+                                //reset
+                                curPathFindingState = PathFindingState.idle;
+                                exploredCoordinates.clear();
+                                shortestCoordinates.clear();
+                                destLookupTextController.clear();
+                                destinationCoord = null;
+                                destName = '';
+                                mapController.move(centerCoord!, mapDefaultZoomValue);
+                                mapController.rotate(0);
+                                manualHeadingValue = 0.0;
+                                contUpdatePos = false;
+                                arrivedAtDest.value = false;
+                                //new route
                                 destLookupTextController.text = point.locName;
                                 destinationCoord = point.coord;
                                 destName = point.locName;
@@ -442,8 +460,15 @@ class _MyHomePageState extends State<MyHomePage> {
         coordinates: [startCoord, destCoord], padding: EdgeInsets.symmetric(horizontal: mapController.camera.nonRotatedSize.x / 5, vertical: mapController.camera.nonRotatedSize.y / 5)));
 
     while (exploredPoints.isEmpty || (exploredPoints.last.coord.latitude != destCoord.latitude && exploredPoints.last.coord.longitude != destCoord.longitude)) {
-      exploredPoints.add(frontier.removeAt(0));
-      exploredCoordinates.add(exploredPoints.last.coord);
+      var removedFrontierPoint = frontier.removeAt(0);
+      if (exploredCoordinates.isNotEmpty && !removedFrontierPoint.neighborCoords.contains(exploredCoordinates.last.last)) {
+        exploredCoordinates.add([
+          exploredPoints.firstWhere((e) => e.neighborCoords.indexWhere((t) => t.latitude == removedFrontierPoint.coord.latitude && t.longitude == removedFrontierPoint.coord.longitude) != -1).coord
+        ]);
+      }
+      exploredPoints.add(removedFrontierPoint);
+      if (exploredCoordinates.isEmpty) exploredCoordinates.add([]);
+      exploredCoordinates.last.add(exploredPoints.last.coord);
       setState(() {});
       await Future.delayed(const Duration(milliseconds: 10));
       List<CoordPoint> neighborPoints = mappedCoords
@@ -551,7 +576,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         child: Icon(showMappingLayer.value ? Icons.map : Icons.map_outlined)),
                     FloatingActionButton.small(
                         tooltip: showExploredPath.value ? 'Hide Explored' : 'Show Explored',
-                        onPressed: () => showExploredPath.value ? showExploredPath.value = false : showExploredPath.value = true,
+                        onPressed: () {
+                          showExploredPath.value ? showExploredPath.value = false : showExploredPath.value = true;
+                          setState(() {});
+                        },
                         child: Icon(showExploredPath.value ? Icons.pattern_sharp : Icons.linear_scale_sharp)),
                   ],
                 ),
@@ -595,13 +623,24 @@ class _MyHomePageState extends State<MyHomePage> {
                       mapController.move(centerCoord!, mapDefaultZoomValue);
                       manualHeadingValue = 0.0;
                     } else if (curPathFindingState == PathFindingState.finding || curPathFindingState == PathFindingState.finished) {
-                      routingFinish();
+                      curPathFindingState = PathFindingState.idle;
+                      exploredCoordinates.clear();
+                      shortestCoordinates.clear();
+                      destLookupTextController.clear();
+                      destinationCoord = null;
+                      destName = '';
+                      mapController.move(centerCoord!, mapDefaultZoomValue);
+                      mapController.rotate(0);
+                      manualHeadingValue = 0.0;
+                      headingAccuracy.value = 0.0;
+                      contUpdatePos = false;
                     } else {
                       exploredCoordinates.clear();
                       shortestCoordinates.clear();
                       curPathFindingState = PathFindingState.finding;
                       setState(() {});
                       await traceRoute(centerCoord!, destinationCoord!);
+                      arrivedAtDest.value = false;
                       curPathFindingState = PathFindingState.finished;
                       contUpdatePos = true;
                     }
