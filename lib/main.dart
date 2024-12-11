@@ -191,7 +191,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           //   }
                           // },
                           onTap: (tapPosition, point) {
-                            if (showMappingLayer.value) {
+                            if (!kIsWeb && showMappingLayer.value) {
                               mappedMakers.add(mappingMaker(point, false, false, false, false));
                               // Get neighbors
                               mappedCoords.add(CoordPoint(
@@ -291,7 +291,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 decoration: InputDecoration(
                                     filled: true,
                                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                                    hintText: 'Enter destination',
+                                    hintText: 'Enter a destination',
                                     suffixIcon: IconButton(
                                         onPressed: () {
                                           if (destLookupTextController.text.isEmpty) {
@@ -419,19 +419,23 @@ class _MyHomePageState extends State<MyHomePage> {
         point: point,
         child: InkWell(
           onSecondaryTap: () {
-            for (var element in mappedCoords.where((e) => e.neighborCoords.indexWhere((c) => c.latitude == point.latitude && c.longitude == point.longitude) != -1)) {
-              element.neighborCoords.removeWhere((e) => e.latitude == point.latitude && e.longitude == point.longitude);
+            if (!kIsWeb) {
+              for (var element in mappedCoords.where((e) => e.neighborCoords.indexWhere((c) => c.latitude == point.latitude && c.longitude == point.longitude) != -1)) {
+                element.neighborCoords.removeWhere((e) => e.latitude == point.latitude && e.longitude == point.longitude);
+              }
+              mappedMakers.removeWhere((element) => element.point.latitude == point.latitude && element.point.longitude == point.longitude);
+              mappedCoords.removeWhere((element) => element.coord.latitude == point.latitude && element.coord.longitude == point.longitude);
+              mappedPaths.removeWhere((e) => e.points.where((p) => p.latitude == point.latitude && p.longitude == point.longitude).isNotEmpty);
+              //Save
+              mappedCoordSave();
+              setState(() {});
             }
-            mappedMakers.removeWhere((element) => element.point.latitude == point.latitude && element.point.longitude == point.longitude);
-            mappedCoords.removeWhere((element) => element.coord.latitude == point.latitude && element.coord.longitude == point.longitude);
-            mappedPaths.removeWhere((e) => e.points.where((p) => p.latitude == point.latitude && p.longitude == point.longitude).isNotEmpty);
-            //Save
-            mappedCoordSave();
-            setState(() {});
           },
           onDoubleTap: () async {
-            await mappingCoordSettingsPopup(context, mappedCoords.firstWhere((e) => e.coord.latitude == point.latitude && e.coord.longitude == point.longitude));
-            setState(() {});
+            if (!kIsWeb) {
+              await mappingCoordSettingsPopup(context, mappedCoords.firstWhere((e) => e.coord.latitude == point.latitude && e.coord.longitude == point.longitude));
+              setState(() {});
+            }
           },
           child: Tooltip(
             message: 'Lat: ${point.latitude}, Long: ${point.longitude}',
