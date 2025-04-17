@@ -25,6 +25,7 @@ MapController mapController = MapController();
 List<Marker> mappedMakers = [];
 List<CoordPoint> mappedCoords = [];
 List<Polyline> mappedPaths = [];
+Signal<Polyline> markedToDelLine = Signal<Polyline>(Polyline(points: []));
 PathFindingState curPathFindingState = PathFindingState.idle;
 String mappedCoordsJsonPath = 'assets/jsons/mapped_coords.json';
 String mappedCoordsLocalJsonPath = '${Directory.current.path}/jsons/mapped_coords_local.json';

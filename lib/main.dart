@@ -12,6 +12,7 @@ import 'package:classroom_nav/helpers/custom_marker.dart';
 import 'package:classroom_nav/helpers/enums.dart';
 import 'package:classroom_nav/helpers/json_helpers.dart';
 import 'package:classroom_nav/helpers/popups.dart';
+import 'package:classroom_nav/widgets/marker_tooltip.dart';
 import 'package:duration/duration.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ import 'package:flutter_map_math/flutter_geo_math.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:overlay_tooltip/overlay_tooltip.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:units_converter/models/extension_converter.dart';
@@ -168,8 +170,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           initialCenter: centerCoord!,
                           initialZoom: mapDefaultZoomValue,
                           maxZoom: mapMaxZoomValue,
-                          cameraConstraint:
-                              CameraConstraint.containCenter(bounds: LatLngBounds(const LatLng(33.8892181509212, -117.89024039406391), const LatLng(33.87568283383185, -117.87979836324752))),
+                          // cameraConstraint:
+                          //     CameraConstraint.containCenter(bounds: LatLngBounds(const LatLng(33.8892181509212, -117.89024039406391), const LatLng(33.87568283383185, -117.87979836324752))),
                           onMapReady: () {
                             mapDoneLoading = true;
                             setState(() {});
@@ -267,6 +269,11 @@ class _MyHomePageState extends State<MyHomePage> {
                               child: PolylineLayer(
                                 polylines: mappedPaths,
                               )),
+                            Visibility(
+                              visible: showMappingLayer.watch(context) && curPathFindingState == PathFindingState.idle && markedToDelLine.watch(context).points.isNotEmpty,
+                              child: PolylineLayer(
+                                polylines: [markedToDelLine.watch(context)],
+                              )),
                           Visibility(visible: showMappingLayer.watch(context) && curPathFindingState == PathFindingState.idle, child: MarkerLayer(markers: mappedMakers)),
 
                           // Destination lookup textfield
@@ -291,7 +298,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 decoration: InputDecoration(
                                     filled: true,
                                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                                    hintText: 'Enter a destination',
+                                    hintText: 'Enter your destination',
                                     suffixIcon: IconButton(
                                         onPressed: () {
                                           if (destLookupTextController.text.isEmpty) {
@@ -397,6 +404,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // Load mapped coords
   Future<List<Marker>> loadMappedMarkers(String jsonPath) async {
     List<Marker> markers = [];
+    if (!File(jsonPath).existsSync()) File(jsonPath).createSync();
     String markersFromJson = kIsWeb || Platform.isAndroid ? await rootBundle.loadString(jsonPath) : await File(jsonPath).readAsString();
     if (markersFromJson.isNotEmpty) {
       var jsonData = await jsonDecode(markersFromJson);
@@ -418,27 +426,29 @@ class _MyHomePageState extends State<MyHomePage> {
         height: 15,
         point: point,
         child: InkWell(
-          onSecondaryTap: () {
-            if (!kIsWeb) {
-              for (var element in mappedCoords.where((e) => e.neighborCoords.indexWhere((c) => c.latitude == point.latitude && c.longitude == point.longitude) != -1)) {
-                element.neighborCoords.removeWhere((e) => e.latitude == point.latitude && e.longitude == point.longitude);
+            onSecondaryTap: () {
+              if (!kIsWeb) {
+                for (var element in mappedCoords.where((e) => e.neighborCoords.indexWhere((c) => c.latitude == point.latitude && c.longitude == point.longitude) != -1)) {
+                  element.neighborCoords.removeWhere((e) => e.latitude == point.latitude && e.longitude == point.longitude);
+                }
+                mappedMakers.removeWhere((element) => element.point.latitude == point.latitude && element.point.longitude == point.longitude);
+                mappedCoords.removeWhere((element) => element.coord.latitude == point.latitude && element.coord.longitude == point.longitude);
+                mappedPaths.removeWhere((e) => e.points.where((p) => p.latitude == point.latitude && p.longitude == point.longitude).isNotEmpty);
+                //Save
+                mappedCoordSave();
+                setState(() {});
               }
-              mappedMakers.removeWhere((element) => element.point.latitude == point.latitude && element.point.longitude == point.longitude);
-              mappedCoords.removeWhere((element) => element.coord.latitude == point.latitude && element.coord.longitude == point.longitude);
-              mappedPaths.removeWhere((e) => e.points.where((p) => p.latitude == point.latitude && p.longitude == point.longitude).isNotEmpty);
-              //Save
-              mappedCoordSave();
-              setState(() {});
-            }
-          },
-          onDoubleTap: () async {
-            if (!kIsWeb) {
-              await mappingCoordSettingsPopup(context, mappedCoords.firstWhere((e) => e.coord.latitude == point.latitude && e.coord.longitude == point.longitude));
-              setState(() {});
-            }
-          },
-          child: Tooltip(
-            message: 'Lat: ${point.latitude}, Long: ${point.longitude}',
+            },
+            onTap: () async {
+              if (!kIsWeb) {
+                int index = mappedCoords.indexWhere((e) => e.coord.latitude == point.latitude && e.coord.longitude == point.longitude);
+                if (index != -1) {
+                  CoordPoint curCoordPoint = mappedCoords[index];
+                  await mappingCoordSettingsPopup(context, curCoordPoint);
+                  setState(() {});
+                }
+              }
+            },
             child: Icon(Icons.gps_fixed_sharp,
                 size: 15,
                 color: isREntrance != null && isREntrance
@@ -449,9 +459,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             ? Colors.yellow
                             : isEvevators != null && isEvevators
                                 ? Colors.orange
-                                : null),
-          ),
-        ));
+                                : null)));
   }
 
   // A* Algorithm
@@ -549,7 +557,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: SizedBox(
                       height: 25,
                       child: Text(
-                        arrivedAtDest.watch(context) ? 'Arrived!' : 'Estimate: ${estimateNavTime.watch(context)}',
+                        arrivedAtDest.watch(context) ? 'Arrived!' : 'Time Estimate: ${estimateNavTime.watch(context)}',
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                       )),
