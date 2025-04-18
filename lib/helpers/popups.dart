@@ -3,6 +3,7 @@ import 'package:classroom_nav/helpers/classes.dart';
 import 'package:classroom_nav/helpers/json_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 
@@ -23,9 +24,12 @@ Future<void> mappingCoordSettingsPopup(context, CoordPoint point) async {
 
   return await showDialog(
       barrierDismissible: false,
+      barrierColor: Colors.transparent,
       context: context,
       builder: (context) => StatefulBuilder(builder: (context, setState) {
             return AlertDialog(
+                insetPadding: EdgeInsets.zero,
+                alignment: Alignment.topLeft,
                 shape: RoundedRectangleBorder(side: BorderSide(color: Theme.of(context).primaryColorLight), borderRadius: const BorderRadius.all(Radius.circular(5))),
                 titlePadding: const EdgeInsets.only(top: 10, bottom: 10, left: 10, right: 10),
                 title: const Text('Coord Settings', style: TextStyle(fontWeight: FontWeight.w700)),
@@ -118,8 +122,10 @@ Future<void> mappingCoordSettingsPopup(context, CoordPoint point) async {
                                   onPressed: () {
                                     if (!toBeRemovedNeighborCoords.contains(point.neighborCoords[i])) {
                                       toBeRemovedNeighborCoords.add(point.neighborCoords[i]);
+                                      markedToDelLine.value = Polyline(points: [point.coord, point.neighborCoords[i]], color: Colors.red, strokeWidth: 6);
                                     } else {
                                       toBeRemovedNeighborCoords.remove(point.neighborCoords[i]);
+                                      markedToDelLine.value = Polyline(points: []);
                                     }
                                     setState(
                                       () {},
@@ -137,10 +143,12 @@ Future<void> mappingCoordSettingsPopup(context, CoordPoint point) async {
                   ElevatedButton(
                       child: const Text('Cancel'),
                       onPressed: () async {
+                        markedToDelLine.value = Polyline(points: []);
                         Navigator.pop(context);
                       }),
                   ElevatedButton(
                       onPressed: () async {
+                        markedToDelLine.value = Polyline(points: []);
                         // Rename
                         if (nameFormKey.currentState!.validate()) {
                           point.locName = newLocName.text;
